@@ -30,9 +30,11 @@ import com.a4.product.beans.SameDayRush;
 import com.a4.product.beans.Samples;
 import com.criteria.parser.ProductColorParser;
 import com.criteria.parser.ProductOriginParser;
+import com.criteria.parser.ProductPackagingParser;
 import com.criteria.parser.ProductRushTimeParser;
 import com.criteria.parser.ProductSameDayParser;
 import com.criteria.parser.ProductSampleParser;
+import com.criteria.parser.ProductThemeParser;
 import com.a4.product.beans.ShippingEstimate;
 import com.a4.product.beans.Size;
 import com.criteria.parser.PersonlizationParser;
@@ -86,7 +88,8 @@ public class ProductExcelMapper {
 			List<String> complianceCerts = new ArrayList<String>();
 			List<String> safetyWarnings = new ArrayList<String>();
 			List<Personalization> personalizationlist = new ArrayList<Personalization>();
-			
+			List<String> packaging = new ArrayList<String>();
+			List<String> themes = new ArrayList<String>();
 			
 			ProductColorParser colorparser=new ProductColorParser();
 			ProductOriginParser originParser=new ProductOriginParser();
@@ -96,6 +99,8 @@ public class ProductExcelMapper {
 			PersonlizationParser personalizationParser=new PersonlizationParser();
 			ShippingEstimationParser shipinestmt = new ShippingEstimationParser();
 			SizeParser sizeParser=new SizeParser();
+			ProductPackagingParser packagingParser=new ProductPackagingParser();
+			ProductThemeParser themeParser=new ProductThemeParser();
 			//ProductConfigurations productConfigObj=new ProductConfigurations();
 			Inventory inventoryObj = new Inventory();
 	        Size sizeObj = new Size();
@@ -251,6 +256,16 @@ public class ProductExcelMapper {
 					
 				break;
 				
+				case 19:
+					String themeValue=cell.getStringCellValue();
+					if(!StringUtils.isEmpty(themeValue)){
+					themes=themeParser.getThemeCriteria(themeValue);
+					if(themes!=null){
+					productConfigObj.setThemes(themes);
+					}
+					}
+					//System.out.println(columnIndex + "Theme " + themes);
+					break;
 					
 				case 21:
 					String originValue=cell.getStringCellValue();
@@ -332,6 +347,16 @@ public class ProductExcelMapper {
 						}
 					break;
 					
+				case 44:
+					String packagingValue=cell.getStringCellValue();
+					if(!StringUtils.isEmpty(packagingValue)){
+					packaging=packagingParser.getPackagingCriteria(packagingValue);
+					if(packaging!=null){
+					productConfigObj.setPackaging(packaging);
+					//System.out.println(columnIndex + "packaging " + packaging);
+					}
+					}
+					break;
 				case 45:
 					shippingitemValue = cell.getStringCellValue();
 					break;
