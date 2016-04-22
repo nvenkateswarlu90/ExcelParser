@@ -16,6 +16,8 @@ public class SizeParser {
 
 	public Size getSizes(String sizeGroup, String sizeValue) {
 		Size sizeObj = new Size();
+		try{
+		
 		//shippingitemValue != null && !shippingitemValue.isEmpty()
 		if (sizeGroup.contains("Dimension")) {
 			Dimension dimensionObj = new Dimension();
@@ -89,6 +91,46 @@ public class SizeParser {
 
 			sizeObj.setVolume(volumeObj);
 
+		}
+
+		if (sizeGroup.contains("Apparel")) {
+
+			Apparel apparelObj = new Apparel();
+			String apparelArr[] = sizeValue.split(",");
+			List<Value> apparelList = new ArrayList<Value>();
+			for (int i = 0; i <= apparelArr.length - 1; i++) {
+				Value valObjc = new Value();
+				valObjc.setValue(apparelArr[i]);
+				apparelObj.setType(sizeGroup);
+
+				apparelList.add(valObjc);
+				apparelObj.setValues(apparelList);
+
+			}
+			sizeObj.setApparel(apparelObj);
+
+		}
+
+		if (sizeGroup.contains("Other")) {
+
+			OtherSize otherObj = new OtherSize();
+			String otherArr[] = sizeValue.split(",");
+			List<Value> otherList = new ArrayList<Value>();
+			for (int i = 0; i <= otherArr.length - 1; i++) {
+				Value valObj = new Value();
+				valObj.setValue(otherArr[i]);
+				otherList.add(valObj);
+			}
+			otherObj.setValues(otherList);
+			sizeObj.setOther(otherObj);
+
+		}
+
+		}
+		
+		catch(Exception e)
+		{
+			return null;
 		}
 		return sizeObj;
 	}
