@@ -26,13 +26,14 @@ public class SizeParser {
 			List<Value> valuelist;
 			Values valuesObj = null;
 			Value valObj;
-			for (int i = 0; i <= DimenArr.length - 1; i++) {
-				String[] DimenArr1 = DimenArr[i].split(";");
+		
+			for (String value : DimenArr) {
+			String[] DimenArr1 = value.split(";");
 				valuesObj = new Values();
 				valuelist = new ArrayList<Value>();
-				for (int j = 0; j <= DimenArr1.length - 1; j++) {
+				for (String value1 : DimenArr1) {
 					valObj = new Value();
-					String[] DimenArr2 = DimenArr1[j].split(":");
+					String[] DimenArr2 = value1.split(":");
 					valObj.setAttribute(DimenArr2[0]);
 					valObj.setValue(DimenArr2[1]);
 					valObj.setUnit(DimenArr2[2]);
@@ -51,9 +52,8 @@ public class SizeParser {
 			Capacity capacityObj = new Capacity();
 			String capacityArr[] = sizeValue.split(",");
 			List<Value> capacityvalueList = new ArrayList<Value>();
-
-			for (int i = 0; i <= capacityArr.length - 1; i++) {
-				String capacityArr1[] = capacityArr[i].split(":");
+              for (String value : capacityArr) {
+				String capacityArr1[] = value.split(":");
 				Value valObjc = new Value();
 				valObjc.setValue(capacityArr1[0]);
 				valObjc.setUnit(capacityArr1[1]);
@@ -72,9 +72,8 @@ public class SizeParser {
 			List<Value> volumeinnerList; // = new ArrayList<Value>();
 			Values valuesObj;// = new Values();
 			Value valObjc;
-
-			for (int i = 0; i <= volumeArr.length - 1; i++) {
-				String volumeArr1[] = volumeArr[i].split(":");
+             for (String value : volumeArr) {
+				String volumeArr1[] = value.split(":");
 				valObjc = new Value();
 				valuesObj = new Values();
 				volumeinnerList = new ArrayList<Value>();
@@ -98,9 +97,10 @@ public class SizeParser {
 			Apparel apparelObj = new Apparel();
 			String apparelArr[] = sizeValue.split(",");
 			List<Value> apparelList = new ArrayList<Value>();
-			for (int i = 0; i <= apparelArr.length - 1; i++) {
+			for (String value : apparelArr) {
+				
 				Value valObjc = new Value();
-				valObjc.setValue(apparelArr[i]);
+				valObjc.setValue(value);
 				apparelObj.setType(sizeGroup);
 
 				apparelList.add(valObjc);
@@ -116,9 +116,10 @@ public class SizeParser {
 			OtherSize otherObj = new OtherSize();
 			String otherArr[] = sizeValue.split(",");
 			List<Value> otherList = new ArrayList<Value>();
-			for (int i = 0; i <= otherArr.length - 1; i++) {
+			for (String value : otherArr) {
+				
 				Value valObj = new Value();
-				valObj.setValue(otherArr[i]);
+				valObj.setValue(value);
 				otherList.add(valObj);
 			}
 			otherObj.setValues(otherList);

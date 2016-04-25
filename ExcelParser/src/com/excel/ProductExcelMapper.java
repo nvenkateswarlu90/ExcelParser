@@ -17,7 +17,6 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.util.StringUtils;
 
 import com.a4.product.beans.Color;
@@ -25,7 +24,6 @@ import com.a4.product.beans.Inventory;
 import com.a4.product.beans.Personalization;
 import com.a4.product.beans.Product;
 import com.a4.product.beans.ProductConfigurations;
-import com.a4.product.beans.ProductSkus;
 import com.a4.product.beans.RushTime;
 import com.a4.product.beans.SameDayRush;
 import com.a4.product.beans.Samples;
