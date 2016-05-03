@@ -3,11 +3,15 @@ package com.criteria.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import com.a4.product.beans.RushTime;
 import com.a4.product.beans.RushTimeValue;
 
 public class ProductRushTimeParser {
 
+	private Logger              _LOGGER              = Logger.getLogger(getClass());
+	 
 	public RushTime getRushTimeCriteria(String rushTimeValue){
 		RushTime rushObj=new RushTime();
 		try{ 
@@ -47,7 +51,7 @@ public class ProductRushTimeParser {
  		rushObj.setAvailable(true);
 		rushObj.setRushTimeValues(rushValueTimeList);
 		}catch(Exception e){
-	         //need to log error over here             
+			_LOGGER.error("Error while processing Personalization :"+e.getMessage());             
 		   	return null;
 		   	
 		   }

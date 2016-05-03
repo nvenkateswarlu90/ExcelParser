@@ -2,6 +2,9 @@ package com.criteria.parser;
 
 import java.util.ArrayList;
 import java.util.List;
+
+import org.apache.log4j.Logger;
+
 import com.a4.product.beans.Dimensions;
 import com.a4.product.beans.NumberOfItems;
 import com.a4.product.beans.ShippingEstimate;
@@ -9,10 +12,15 @@ import com.a4.product.beans.Weight;
 
 public class ShippingEstimationParser {
 
+	private Logger              _LOGGER              = Logger.getLogger(getClass());
+	
 	public ShippingEstimate getShippingEstimates(String shippingitemValue,
 			String shippingdimensionValue, String shippingWeightValue) {
 
+		
 		ShippingEstimate ItemObject = new ShippingEstimate();
+		
+		try{
 		List<Object> shipingEstObj1 = new ArrayList<Object>();
 		List<Object> shipingEstObj2 = new ArrayList<Object>();
 
@@ -56,6 +64,10 @@ public class ShippingEstimationParser {
 				dimenlist.add(dimensionObj);
 			}
 			ItemObject.setDimensions(dimensionObj);
+		}
+		}catch(Exception e){
+			_LOGGER.error("Error while processing Shipping Estimate :"+e.getMessage());
+			return null;
 		}
 		return ItemObject;
 
