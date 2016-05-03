@@ -3,11 +3,15 @@ package com.criteria.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import com.a4.product.beans.Color;
 import com.a4.product.beans.Combo;
 
 public class ProductColorParser {
-	 private final static String COMBO_VALUES_SEPARATOR = ":";
+	private Logger              _LOGGER              = Logger.getLogger(getClass()); 
+	
+	private final static String COMBO_VALUES_SEPARATOR = ":";
 	 private final static Integer COMBO_TEXT_VALUE_INDEX = 1;
 	 public static final String   CONST_STRING_COMBO_TEXT = "Combo";
 	   
@@ -92,7 +96,7 @@ public class ProductColorParser {
 		}
 
 		}catch(Exception e){
-		//need to log error over here
+			_LOGGER.error("Error while processing Color :"+e.getMessage());
          return null;	
          }
 		

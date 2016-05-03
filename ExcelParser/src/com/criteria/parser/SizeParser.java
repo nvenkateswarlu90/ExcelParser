@@ -3,6 +3,8 @@ package com.criteria.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import com.a4.product.beans.Apparel;
 import com.a4.product.beans.Capacity;
 import com.a4.product.beans.Dimension;
@@ -13,10 +15,12 @@ import com.a4.product.beans.Values;
 import com.a4.product.beans.Volume;
 
 public class SizeParser {
+	
+	private Logger              _LOGGER              = Logger.getLogger(getClass());
 
 	public Size getSizes(String sizeGroup, String sizeValue) {
 		Size sizeObj = new Size();
-		//shippingitemValue != null && !shippingitemValue.isEmpty()
+		try{
 		if (sizeGroup.contains("Dimension")) {
 			Dimension dimensionObj = new Dimension();
 			String DimenArr[] = sizeValue.split(",");
@@ -89,6 +93,10 @@ public class SizeParser {
 
 			sizeObj.setVolume(volumeObj);
 
+		}
+		}catch(Exception e){
+			_LOGGER.error("Error while processing Size :"+e.getMessage());
+			return null;
 		}
 		return sizeObj;
 	}

@@ -3,12 +3,16 @@ package com.criteria.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import com.a4.product.beans.RushTime;
 import com.a4.product.beans.RushTimeValue;
 import com.a4.product.beans.Samples;
 
 public class ProductSampleParser {
 
+	private Logger              _LOGGER              = Logger.getLogger(getClass());
+	
 	public Samples getSampleCriteria(String prodsample, String specSample,
 			boolean flag) {
 		Samples samplesObj = new Samples();
@@ -58,7 +62,7 @@ public class ProductSampleParser {
 		specSampleValue=null;
 		prodSampleValue=null;
 		}catch(Exception e){
-	         //need to log error over here             
+			_LOGGER.error("Error while processing Sample Parser :"+e.getMessage());          
 		   	return null;
 		   	
 		   }

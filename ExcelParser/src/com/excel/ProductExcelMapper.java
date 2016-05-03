@@ -10,6 +10,7 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 
+import org.apache.log4j.Logger;
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
@@ -20,21 +21,29 @@ import org.apache.poi.ss.usermodel.WorkbookFactory;
 import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.util.StringUtils;
 
+import com.a4.product.beans.Artwork;
 import com.a4.product.beans.Color;
+import com.a4.product.beans.ImprintMethod;
 import com.a4.product.beans.Inventory;
 import com.a4.product.beans.Personalization;
 import com.a4.product.beans.Product;
 import com.a4.product.beans.ProductConfigurations;
+import com.a4.product.beans.ProductionTime;
 import com.a4.product.beans.RushTime;
 import com.a4.product.beans.SameDayRush;
 import com.a4.product.beans.Samples;
+import com.a4.product.beans.Shape;
+import com.criteria.parser.ProductArtworkProcessor;
 import com.criteria.parser.ProductColorParser;
+import com.criteria.parser.ProductImprintMethodParser;
 import com.criteria.parser.ProductOriginParser;
 import com.criteria.parser.ProductPackagingParser;
 import com.criteria.parser.ProductRushTimeParser;
 import com.criteria.parser.ProductSameDayParser;
 import com.criteria.parser.ProductSampleParser;
-import com.criteria.parser.ProductThemeParser;
+import com.criteria.parser.ProductShapeParser;
+import com.criteria.parser.ProductTradeNameParser;
+import com.criteria.parser.ProductionTimeParser;
 import com.a4.product.beans.ShippingEstimate;
 import com.a4.product.beans.Size;
 import com.criteria.parser.PersonlizationParser;
@@ -46,32 +55,54 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 
 public class ProductExcelMapper {
-	public static void main(String[] args) throws IOException, EncryptedDocumentException, InvalidFormatException {
-		List<Product> BeanObj = readFileUsingPOI("D:\\A4 ESPUpdate\\Excel File\\v2\\productv2.xlsx");
+	
+	private   Logger              _LOGGER              = Logger.getLogger(getClass());
+	
+	public static void main(String[] args)  {
+		try
+		{
+		ProductExcelMapper djvsd= new ProductExcelMapper();
+		List<Product> BeanObj = djvsd.readFileUsingPOI("D:\\A4 ESPUpdate\\Excel File\\v2\\productv2.xlsx");
 		if(BeanObj==null){
 			// log error or write business logic
 			System.out.println("there was an error while prcessing this file");
 		}else{
 			System.out.println("send for posting to asi");
 		}
+		}catch(Exception e){
+			
+		}
 	}
 	
 	
-	public static synchronized List<Product> readFileUsingPOI(String path) throws IOException, EncryptedDocumentException, InvalidFormatException {
+	public  synchronized List<Product> readFileUsingPOI(String path)   {
 		List<Product>   productList = new ArrayList<Product>();
-		FileInputStream inputStream = new FileInputStream(new File(path));
-		Workbook workbook = WorkbookFactory.create(new File(path));//new XSSFWorkbook(inputStream);
-		  Product productExcelObj = new Product();
-		  ProductConfigurations productConfigObj=new ProductConfigurations();
-			
-		try{
+		//_LOGGER.error("Error while Processing excel sheet :"+path.substring(path.lastIndexOf("\\")).replaceAll("\\","") );
+		_LOGGER.info("Reading Excel file from File Path"+path.substring(path.lastIndexOf("\\")) );
+         //System.out.println(path.length());
+		//System.out.println(path.length()-1);
+		//int b=path.length()-1;
+        //System.out.println(path.substring(path.lastIndexOf("\\")));
+		//System.out.println(path.substring(path.lastIndexOf("'\'"), b));
 		
+         FileInputStream inputStream = null;
+         Workbook workbook = null;
+		try{
+			  inputStream = new FileInputStream(new File(path));
+			_LOGGER.info("Completed Reading Excel file from File Path");
+			_LOGGER.info("Creating & Initializing Workbook");
+			  workbook = WorkbookFactory.create(new File(path));//new XSSFWorkbook(inputStream);
+			_LOGGER.info("Workbook Object created");
+			  Product productExcelObj = new Product();
+			  ProductConfigurations productConfigObj=new ProductConfigurations();
+	    _LOGGER.info("Processing WorkSheet");
 	    Sheet sheet = workbook.getSheetAt(0);
 		Iterator<Row> iterator = sheet.iterator();
-		
+		_LOGGER.info("Started Processing Product");
 		while (iterator.hasNext()) {
+			
+			try{
 			Row nextRow = iterator.next();
-		System.out.println("roooowwwwwww numberrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr  "+nextRow.getRowNum());
 			if (nextRow.getRowNum() == 0)
 				continue;
 			Iterator<Cell> cellIterator = nextRow.cellIterator();
@@ -90,6 +121,11 @@ public class ProductExcelMapper {
 			List<Personalization> personalizationlist = new ArrayList<Personalization>();
 			List<String> packaging = new ArrayList<String>();
 			List<String> themes = new ArrayList<String>();
+			List<String> tradeName = new ArrayList<String>();
+			List<ImprintMethod> imprintMethods = new ArrayList<ImprintMethod>();
+			List<Artwork> artworkList = new ArrayList<Artwork>();
+			List<Shape> shapeList=new ArrayList<Shape>();
+			List<ProductionTime> productionTimeList = new ArrayList<ProductionTime>();
 			
 			ProductColorParser colorparser=new ProductColorParser();
 			ProductOriginParser originParser=new ProductOriginParser();
@@ -100,7 +136,12 @@ public class ProductExcelMapper {
 			ShippingEstimationParser shipinestmt = new ShippingEstimationParser();
 			SizeParser sizeParser=new SizeParser();
 			ProductPackagingParser packagingParser=new ProductPackagingParser();
-			ProductThemeParser themeParser=new ProductThemeParser();
+			ProductTradeNameParser tradeNameParser=new ProductTradeNameParser();
+			ProductImprintMethodParser imprintMethodParser=new ProductImprintMethodParser();
+			ProductArtworkProcessor artworkProcessor=new ProductArtworkProcessor();
+			ProductShapeParser shapeParser=new ProductShapeParser();
+			ProductionTimeParser productionTimeParser =new ProductionTimeParser();
+			
 			//ProductConfigurations productConfigObj=new ProductConfigurations();
 			Inventory inventoryObj = new Inventory();
 	        Size sizeObj = new Size();
@@ -120,13 +161,14 @@ public class ProductExcelMapper {
 				switch (columnIndex + 1) {
 				case 1:
 					String externalProductId = cell.getStringCellValue();
+					_LOGGER.info("Processing Product :"+ externalProductId);
 					/*if(externalProductId==null || externalProductId.isEmpty()){
 						rowFlag=true;
 						break;
 					}*/
 					productExcelObj.setExternalProductId(externalProductId);
 					// //System.out.println("external id is " +externalProductId);
-					System.out.println("case 1");
+					 
 					break;
 					
 				case 2:
@@ -138,7 +180,7 @@ public class ProductExcelMapper {
 						productExcelObj.setName("");
 					}
 					// //System.out.println("product name is " +name);
-					System.out.println("case 2");
+					//System.out.println("case 2");
 					break;
 				case 3:
 					int asiProdNo = (int) cell.getNumericCellValue();
@@ -152,7 +194,7 @@ public class ProductExcelMapper {
 					}else{
 						productExcelObj.setProductLevelSku("");
 					}
-					System.out.println("case 4");
+					//System.out.println("case 4");
 					break;
 					
 				case 5:
@@ -243,28 +285,38 @@ public class ProductExcelMapper {
 					
 				case 16:
 					 sizeGroup = cell.getStringCellValue();	
-					 System.out.println("case 16");
+					 //System.out.println("case 16");
 				break;
 				
 				case 17:
 					
 					String sizeValue = cell.getStringCellValue();
-					System.out.println("case 17");
+					//System.out.println("case 17");
 					sizeObj=sizeParser.getSizes(sizeGroup,sizeValue);
 					productConfigObj.setSizes(sizeObj);
-					System.out.println("Size Info is  "  +sizeObj);
+					//System.out.println("Size Info is  "  +sizeObj);
 					
 				break;
 				
-				case 19:
-					String themeValue=cell.getStringCellValue();
-					if(!StringUtils.isEmpty(themeValue)){
-					themes=themeParser.getThemeCriteria(themeValue);
-					if(themes!=null){
-					productConfigObj.setThemes(themes);
+                case 18:
+					String shapeValue=cell.getStringCellValue();
+					if(!StringUtils.isEmpty(shapeValue)){
+					shapeList=shapeParser.getShapeCriteria(shapeValue);
+					if(shapeList!=null){
+					productConfigObj.setShapes(shapeList);
 					}
 					}
-					//System.out.println(columnIndex + "Theme " + themes);
+					break;
+					
+				case 20:
+					String tradeValue=cell.getStringCellValue();
+					if(!StringUtils.isEmpty(tradeValue)){
+					tradeName=tradeNameParser.getTradeNameCriteria(tradeValue);
+					if(tradeName!=null){
+					productConfigObj.setTradeNames(tradeName);
+					}
+					}
+					//System.out.println(columnIndex + "tradeName " + tradeName);
 					break;
 					
 				case 21:
@@ -275,10 +327,20 @@ public class ProductExcelMapper {
 					productConfigObj.setOrigins(origin);
 					}
 					}
-					System.out.println("case 21");
+					//System.out.println("case 21");
 					
 					break;
 					
+				case 28:
+					String imprintValue=cell.getStringCellValue();
+					if(!StringUtils.isEmpty(imprintValue)){
+					imprintMethods=imprintMethodParser.getImprintCriteria(imprintValue);
+					if(imprintMethods!=null){
+					productConfigObj.setImprintMethods(imprintMethods);
+					}
+					}
+					//System.out.println(columnIndex + "imprintMethods " + imprintMethods);
+					break;
 					
 				case 29:
 					String lineName = cell.getStringCellValue();
@@ -292,13 +354,21 @@ public class ProductExcelMapper {
 					
 					break;
 					
+				case 30:
+					String artwork = cell.getStringCellValue();
+					if(!StringUtils.isEmpty(artwork)){
+					artworkList=artworkProcessor.getArtworkCriteria(artwork);
+					if(artworkList!=null){
+					productConfigObj.setArtwork(artworkList);
+					}}
+					break;
 					
 				case 33:
 					String persnlization = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(persnlization)){
 					personalizationlist = personalizationParser.getPersonalization(persnlization);
 					productConfigObj.setPersonalization(personalizationlist);
-					System.out.println("case 33");
+					//System.out.println("case 33");
 					}
 					break;
 					
@@ -320,6 +390,18 @@ public class ProductExcelMapper {
 					}
 					//System.out.println(columnIndex + "samples " + samples);
 					break;
+					
+				case 40:
+					String productionTime = cell.getStringCellValue();
+					if(!StringUtils.isEmpty(productionTime)){
+					productionTimeList=productionTimeParser.getProdTimeCriteria(productionTime);
+					if(productionTimeList!=null){
+					productConfigObj.setProductionTime(productionTimeList);
+					}
+					//System.out.println(columnIndex + "productionTimeList " + productionTimeList);
+				}
+					System.out.println("case 40");
+					break;	
 					
 					
 				case 41:
@@ -363,7 +445,7 @@ public class ProductExcelMapper {
 					
 				case 46:
 					shippingdimensionValue = cell.getStringCellValue();
-					System.out.println("case 46");
+					//System.out.println("case 46");
 					break;
 					
 				case 47:
@@ -373,7 +455,7 @@ public class ProductExcelMapper {
 							shippingitemValue, shippingdimensionValue,
 							shippingWeightValue);
 					productConfigObj.setShippingEstimates(ShipingItem);
-					System.out.println("case 47");
+					//System.out.println("case 47");
 					break;
 					
 				case 48:
@@ -395,7 +477,7 @@ public class ProductExcelMapper {
 					}else{
 						productExcelObj.setAdditionalShippingInfo("");	
 					}
-					System.out.println("case 49");
+					//System.out.println("case 49");
 					break;
 					
 				case 50:
@@ -476,7 +558,7 @@ public class ProductExcelMapper {
 					else{
 						productExcelObj.setProductDisclaimer("");
 					} 
-					System.out.println(columnIndex + "productDisclaimer "+ productDisclaimer);
+					//System.out.println(columnIndex + "productDisclaimer "+ productDisclaimer);
 					break;
 					
 				case 94:
@@ -536,7 +618,7 @@ public class ProductExcelMapper {
 					} else {
 						productExcelObj.setSeoFlag(false);
 					}
-					System.out.println("case 149 " +cell.getStringCellValue());
+					//System.out.println("case 149 " +cell.getStringCellValue());
 					break;
 				}
 				
@@ -545,8 +627,8 @@ public class ProductExcelMapper {
 			
 			ObjectMapper mapper = new ObjectMapper();
 			try {
-				File json = new File("D:\\A4 ESPUpdate\\Excel File\\v2\\player.json");
-			mapper.writeValue(json, productExcelObj);
+			//	File json = new File("D:\\A4 ESPUpdate\\Excel File\\v2\\player.json");
+			//mapper.writeValue(json, productExcelObj);
 			System.out.println("/////////////////////////////////////////");
 			System.out.println("Java object converted to JSON String, written to file");
 			System.out.println(mapper.writeValueAsString(productExcelObj)); 
@@ -558,23 +640,41 @@ public class ProductExcelMapper {
 				ex.printStackTrace(); 
 				} 
 			catch (IOException ex)
-			{ ex.printStackTrace();
+			{ 
+				ex.printStackTrace();
+				
 			}
-
-			productList.add(productExcelObj);
+			//product object when it is null;//do excption handling
+			
+		}catch(Exception e){
+			//e.printStackTrace();
+			_LOGGER.error("Error while Processing Product :"+productExcelObj.getExternalProductId() );
+			
+			 
 		}
+			productList.add(productExcelObj);
 		workbook.close();
 		inputStream.close();
+		}
 		}catch(Exception e){
-			e.printStackTrace();
-			// log error over here
+			//e.printStackTrace();
+			_LOGGER.error("Error while Processing excel sheet :"+path.substring(path.lastIndexOf("\\")) +e.getMessage());
 			
 			return null;
 		}finally{
-			workbook.close();
+			try {
+				workbook.close();
 			inputStream.close();
-				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				//e.printStackTrace();
+				_LOGGER.error("Error while Processing excel sheet :"+path.substring(path.lastIndexOf("\\"))+e.getMessage());
+			}
+			
+			
 		}
+		_LOGGER.info("Complted processing of excel sheet :"+path.substring(path.lastIndexOf("\\") ));
+		_LOGGER.info("Total no of product:"+productList.size() );
 		return productList;
 	}
 }

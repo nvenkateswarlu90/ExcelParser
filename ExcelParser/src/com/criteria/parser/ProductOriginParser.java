@@ -3,9 +3,13 @@ package com.criteria.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 
 public class ProductOriginParser {
 
+	private Logger              _LOGGER              = Logger.getLogger(getClass());
+	
 	public List<String> getOriginCriteria(String origin){
 		List<String> originList =new ArrayList<String>();
 		try{ 
@@ -17,7 +21,7 @@ public class ProductOriginParser {
 		}
 		
 		}catch(Exception e){
-	         //need to log error over here             
+			_LOGGER.error("Error while processing Product Origin :"+e.getMessage());            
 		   	return null;
 		   	
 		   }

@@ -1,8 +1,13 @@
 package com.criteria.parser;
 
+import org.apache.log4j.Logger;
+
 import com.a4.product.beans.SameDayRush;
 
 public class ProductSameDayParser {
+	
+	private Logger              _LOGGER              = Logger.getLogger(getClass());
+	
 	public SameDayRush getSameDayRush(String value){
 		SameDayRush sdayObj=new SameDayRush();
 		try{
@@ -26,7 +31,7 @@ public class ProductSameDayParser {
 		}
 		
 		}catch(Exception e){
-	         //need to log error over here             
+			_LOGGER.error("Error while processing SameDay Parser :"+e.getMessage());           
 		   	return null;
 		   	
 		   }
