@@ -12,7 +12,7 @@ import com.a4.product.beans.Value;
 import com.a4.product.beans.Values;
 import com.a4.product.beans.Volume;
 
-public class SizeParser {
+public class ProductSizeParser {
 
 	public Size getSizes(String sizeGroup, String sizeValue) {
 		Size sizeObj = new Size();

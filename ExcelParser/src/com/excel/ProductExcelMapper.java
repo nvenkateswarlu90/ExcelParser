@@ -24,6 +24,7 @@ import com.a4.product.beans.Inventory;
 import com.a4.product.beans.Personalization;
 import com.a4.product.beans.Product;
 import com.a4.product.beans.ProductConfigurations;
+import com.a4.product.beans.ProductSkus;
 import com.a4.product.beans.RushTime;
 import com.a4.product.beans.SameDayRush;
 import com.a4.product.beans.Samples;
@@ -34,11 +35,12 @@ import com.criteria.parser.ProductRushTimeParser;
 import com.criteria.parser.ProductSameDayParser;
 import com.criteria.parser.ProductSampleParser;
 import com.criteria.parser.ProductThemeParser;
+import com.criteria.parser.ProductSkuParser;
 import com.a4.product.beans.ShippingEstimate;
 import com.a4.product.beans.Size;
-import com.criteria.parser.PersonlizationParser;
+import com.criteria.parser.ProductPersonlizationParser;
 import com.criteria.parser.ShippingEstimationParser;
-import com.criteria.parser.SizeParser;
+import com.criteria.parser.ProductSizeParser;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -52,9 +54,9 @@ public class ProductExcelMapper {
 		List<Product> BeanObj = readFileUsingPOI("D:\\Excel Reader\\productv2.xlsx");
 		if(BeanObj==null){
 			// log error or write business logic
-			System.out.println("there was an error while prcessing this file");
+			//System.out.println("there was an error while prcessing this file");
 		}else{
-			System.out.println("send for posting to asi");
+			//System.out.println("send for posting to asi");
 		}
 	}
 	
@@ -73,7 +75,7 @@ public class ProductExcelMapper {
 		
 		while (iterator.hasNext()) {
 			Row nextRow = iterator.next();
-		System.out.println("roooowwwwwww numberrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr  "+nextRow.getRowNum());
+		//System.out.println("roooowwwwwww numberrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr  "+nextRow.getRowNum());
 			if (nextRow.getRowNum() == 0)
 				continue;
 			Iterator<Cell> cellIterator = nextRow.cellIterator();
@@ -98,15 +100,18 @@ public class ProductExcelMapper {
 			ProductRushTimeParser rushTimeParser=new ProductRushTimeParser();
 			ProductSameDayParser sameDayParser=new ProductSameDayParser();
 			ProductSampleParser sampleParser =new ProductSampleParser();
-			PersonlizationParser personalizationParser=new PersonlizationParser();
+			ProductPersonlizationParser personalizationParser=new ProductPersonlizationParser();
 			ShippingEstimationParser shipinestmt = new ShippingEstimationParser();
-			SizeParser sizeParser=new SizeParser();
+			ProductSizeParser sizeParser=new ProductSizeParser();
 			ProductPackagingParser packagingParser=new ProductPackagingParser();
 			ProductThemeParser themeParser=new ProductThemeParser();
-			//ProductConfigurations productConfigObj=new ProductConfigurations();
 			Inventory inventoryObj = new Inventory();
 	        Size sizeObj = new Size();
 			ShippingEstimate ShipingItem = new ShippingEstimate();
+			List<ProductSkus> productsku=new ArrayList<ProductSkus>();
+			ProductSkus skuObj= new ProductSkus();
+			ProductSkuParser skuparserobj=new ProductSkuParser();
+			
 		
 			
 			String shippingitemValue = null;
@@ -114,7 +119,12 @@ public class ProductExcelMapper {
 			String sizeGroup=null;
 			String rushService=null;
 			String prodSample=null;
-			
+			String SKUCriteria1 =null;
+			String SKUCriteria2 =null;
+			String skuvalue  =null;
+			String Inlink  =null;
+			String Instatus  =null;
+		
 			
 			while (cellIterator.hasNext()) {
 				Cell cell = cellIterator.next();
@@ -129,7 +139,7 @@ public class ProductExcelMapper {
 					}*/
 					productExcelObj.setExternalProductId(externalProductId);
 					// //System.out.println("external id is " +externalProductId);
-					System.out.println("case 1");
+					//System.out.println("case 1");
 					break;
 					
 				case 2:
@@ -141,7 +151,7 @@ public class ProductExcelMapper {
 						productExcelObj.setName("");
 					}
 					// //System.out.println("product name is " +name);
-					System.out.println("case 2");
+					//System.out.println("case 2");
 					break;
 				case 3:
 					int asiProdNo = (int) cell.getNumericCellValue();
@@ -155,7 +165,7 @@ public class ProductExcelMapper {
 					}else{
 						productExcelObj.setProductLevelSku("");
 					}
-					System.out.println("case 4");
+					//System.out.println("case 4");
 					break;
 					
 				case 5:
@@ -204,7 +214,7 @@ public class ProductExcelMapper {
 					}else{
 						productExcelObj.setSummary("");
 					}
-					// //System.out.println("summary of product is " +summary);
+					//System.out.println("summary of product is " +summary);
 					break;
 				
 				case 12:
@@ -246,16 +256,16 @@ public class ProductExcelMapper {
 					
 				case 16:
 					 sizeGroup = cell.getStringCellValue();	
-					 System.out.println("case 16");
+					 //System.out.println("case 16");
 				break;
 				
 				case 17:
 					
 					String sizeValue = cell.getStringCellValue();
-					System.out.println("case 17");
+					//System.out.println("case 17");
 					sizeObj=sizeParser.getSizes(sizeGroup,sizeValue);
 					productConfigObj.setSizes(sizeObj);
-					System.out.println("Size Info is  "  +sizeObj);
+					//System.out.println("Size Info is  "  +sizeObj);
 					
 				break;
 				
@@ -278,7 +288,7 @@ public class ProductExcelMapper {
 					productConfigObj.setOrigins(origin);
 					}
 					}
-					System.out.println("case 21");
+					//System.out.println("case 21");
 					
 					break;
 					
@@ -301,14 +311,14 @@ public class ProductExcelMapper {
 					if(!StringUtils.isEmpty(persnlization)){
 					personalizationlist = personalizationParser.getPersonalization(persnlization);
 					productConfigObj.setPersonalization(personalizationlist);
-					System.out.println("case 33");
+					//System.out.println("case 33");
 					}
 					break;
 					
 					
 				case 38:
 					prodSample = cell.getStringCellValue();
-					////System.out.println(columnIndex + "prodSample " + prodSample);
+					//System.out.println(columnIndex + "prodSample " + prodSample);
 					break;
 					
 				case 39:
@@ -366,7 +376,6 @@ public class ProductExcelMapper {
 					
 				case 46:
 					shippingdimensionValue = cell.getStringCellValue();
-					System.out.println("case 46");
 					break;
 					
 				case 47:
@@ -376,7 +385,7 @@ public class ProductExcelMapper {
 							shippingitemValue, shippingdimensionValue,
 							shippingWeightValue);
 					productConfigObj.setShippingEstimates(ShipingItem);
-					System.out.println("case 47");
+					//System.out.println("case 47");
 					break;
 					
 				case 48:
@@ -398,7 +407,7 @@ public class ProductExcelMapper {
 					}else{
 						productExcelObj.setAdditionalShippingInfo("");	
 					}
-					System.out.println("case 49");
+					//System.out.println("case 49");
 					break;
 					
 				case 50:
@@ -479,7 +488,7 @@ public class ProductExcelMapper {
 					else{
 						productExcelObj.setProductDisclaimer("");
 					} 
-					System.out.println(columnIndex + "productDisclaimer "+ productDisclaimer);
+					//System.out.println(columnIndex + "productDisclaimer "+ productDisclaimer);
 					break;
 					
 				case 94:
@@ -520,8 +529,40 @@ public class ProductExcelMapper {
 					//System.out.println(columnIndex + "priceConfirmedThru "+ priceConfirmedThru);
 					break;
 					
-			
-						
+				case 140:
+				   SKUCriteria1 = cell.getStringCellValue();
+					break;
+					
+				case 141:
+				   SKUCriteria2 = cell.getStringCellValue();
+					break;
+					
+				case 144:
+					skuvalue = cell.getStringCellValue();
+					break;
+					
+				case 145:
+					Inlink = cell.getStringCellValue();
+					break;
+					
+					
+				case 146:
+				    Instatus = cell.getStringCellValue();
+					break;
+					
+				
+				case 147:
+					//int InQuantity= cell.getStringCellValue();
+					int InQuantity = (int) cell.getNumericCellValue();
+					skuObj=skuparserobj.getProductRelationSkus(SKUCriteria1, SKUCriteria2, skuvalue, Inlink, Instatus,InQuantity);
+					
+					
+					if(!StringUtils.isEmpty(skuObj.getSKU())){
+						productsku.add(skuObj);	
+					productExcelObj.setProductRelationSkus(productsku);
+					}
+					
+					break;	
 				case 148:
 					String distributorViewOnly = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(distributorViewOnly) && distributorViewOnly.trim().equalsIgnoreCase("Y")) {
@@ -541,7 +582,7 @@ public class ProductExcelMapper {
 					} else {
 						productExcelObj.setSeoFlag(false);
 					}
-					System.out.println("case 149 " +cell.getStringCellValue());
+					//System.out.println("case 149 " +cell.getStringCellValue());
 					break;
 				}
 				
@@ -552,10 +593,10 @@ public class ProductExcelMapper {
 			try {
 				File json = new File("D:\\Excel Reader\\file.json");
 			mapper.writeValue(json, productExcelObj);
-			System.out.println("/////////////////////////////////////////");
-			System.out.println("Java object converted to JSON String, written to file");
-			System.out.println(mapper.writeValueAsString(productExcelObj)); 
-			System.out.println("/////////////////////////////////////////");
+			//System.out.println("/////////////////////////////////////////");
+			//System.out.println("Java object converted to JSON String, written to file");
+			//System.out.println(mapper.writeValueAsString(productExcelObj)); 
+			//System.out.println("/////////////////////////////////////////");
 			} catch (JsonGenerationException ex) 
 			{ ex.printStackTrace(); 
 			} 

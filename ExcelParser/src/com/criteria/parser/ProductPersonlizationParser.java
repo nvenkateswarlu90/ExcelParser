@@ -4,7 +4,7 @@ import java.util.ArrayList;
 import java.util.List;
 import com.a4.product.beans.Personalization;
 
-public class PersonlizationParser {
+public class ProductPersonlizationParser {
 	public  List<Personalization> getPersonalization(
 			String personalizevalue) {
 		List<Personalization> personaliseList = new ArrayList<Personalization>();
