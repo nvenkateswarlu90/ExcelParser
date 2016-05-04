@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import com.a4.product.beans.Personalization;
+import com.excel.ApplicationConstants;
 
 public class PersonlizationParser {
 	
@@ -16,13 +17,13 @@ public class PersonlizationParser {
 
 		List<Personalization> personaliseList = new ArrayList<Personalization>();
 		try{
-		String PersonalizationArr[] = personalizevalue.split(",");
+		String PersonalizationArr[] = personalizevalue.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 		for (int i = 0; i <= PersonalizationArr.length - 1; i++) {
 			Personalization perObj = new Personalization();
 			String pers = PersonalizationArr[i];
 			String[] temp = null;
-			if (pers.contains("=")) {
-				temp = pers.split("=");
+			if (pers.contains(ApplicationConstants.CONST_STRING_EQUAL)) {
+				temp = pers.split(ApplicationConstants.CONST_STRING_EQUAL);
 				perObj.setType(temp[0]);
 				perObj.setAlias(temp[1]);
 			} else {

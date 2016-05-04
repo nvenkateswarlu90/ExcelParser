@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import com.a4.product.beans.ProductionTime;
+import com.excel.ApplicationConstants;
 
 public class ProductionTimeParser {
 	
@@ -17,13 +18,13 @@ public synchronized List<ProductionTime> getProdTimeCriteria(String prodTimeValu
 		try{
 			String tempValue = prodTimeValue;
 			String regex=null;
-			String prodTimetArr[] = tempValue.split(",");
+			String prodTimetArr[] = tempValue.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 			
 			ProductionTime prodTimeObj=null;
 			for (String tempProdTime : prodTimetArr) {
 	 			prodTimeObj= new ProductionTime();
 	 			String value=tempProdTime;
-	 			String valueArr[]=value.split(":"); 
+	 			String valueArr[]=value.split(ApplicationConstants.CONST_DELIMITER_COLON); 
 	 			
 	 			if(valueArr.length==2){
 	 				prodTimeObj.setBusinessDays(valueArr[0]);
@@ -33,9 +34,9 @@ public synchronized List<ProductionTime> getProdTimeCriteria(String prodTimeValu
 	 				
 	 				if(valueArr[0].matches(regex)){
 	 					prodTimeObj.setBusinessDays(valueArr[0]);
-	 					prodTimeObj.setDetails("");
+	 					prodTimeObj.setDetails(ApplicationConstants.CONST_STRING_EMPTY);
 	 				}else{
-	 					prodTimeObj.setBusinessDays("");
+	 					prodTimeObj.setBusinessDays(ApplicationConstants.CONST_STRING_EMPTY);
 	 					prodTimeObj.setDetails(valueArr[1]);
 	 				}
 	 				

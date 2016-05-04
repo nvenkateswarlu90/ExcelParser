@@ -9,6 +9,7 @@ import com.a4.product.beans.Dimensions;
 import com.a4.product.beans.NumberOfItems;
 import com.a4.product.beans.ShippingEstimate;
 import com.a4.product.beans.Weight;
+import com.excel.ApplicationConstants;
 
 public class ShippingEstimationParser {
 
@@ -26,7 +27,7 @@ public class ShippingEstimationParser {
 
 		NumberOfItems itemObj = new NumberOfItems();
 		if (shippingitemValue != null && !shippingitemValue.isEmpty()) {
-			String shipItemArr[] = shippingitemValue.split(":");
+			String shipItemArr[] = shippingitemValue.split(ApplicationConstants.CONST_DELIMITER_COLON);
 			itemObj.setUnit(shipItemArr[0]);
 			itemObj.setValue(shipItemArr[1]);
 			shipingEstObj1.add(itemObj);
@@ -35,7 +36,7 @@ public class ShippingEstimationParser {
 
 		if (shippingWeightValue != null && !shippingWeightValue.isEmpty()) {
 			Weight weightObj = new Weight();
-			String shipweightArr[] = shippingWeightValue.split(":");
+			String shipweightArr[] = shippingWeightValue.split(ApplicationConstants.CONST_DELIMITER_COLON);
 			weightObj.setUnit(shipweightArr[0]);
 			weightObj.setValue(shipweightArr[1]);
 			shipingEstObj2.add(weightObj);
@@ -43,12 +44,12 @@ public class ShippingEstimationParser {
 		}
 
 		if (shippingdimensionValue != null && !shippingdimensionValue.isEmpty()) {
-			String shipDimenArr[] = shippingdimensionValue.split(";");
+			String shipDimenArr[] = shippingdimensionValue.split(ApplicationConstants.CONST_DELIMITER_SEMICOLON);
 			List<Dimensions> dimenlist = new ArrayList<Dimensions>();
 			Dimensions dimensionObj = new Dimensions();
 			for (int i = 0; i <= shipDimenArr.length - 1; i++) {
 
-				String[] shipDimenArr1 = shipDimenArr[i].split(":");
+				String[] shipDimenArr1 = shipDimenArr[i].split(ApplicationConstants.CONST_DELIMITER_COLON);
 				if (i == 0) {
 					dimensionObj.setHeight(shipDimenArr1[0]);
 					dimensionObj.setHeightUnit(shipDimenArr1[1]);

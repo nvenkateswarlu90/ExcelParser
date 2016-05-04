@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import com.excel.ApplicationConstants;
+
 public class ProductPackagingParser {
 
 	private Logger              _LOGGER              = Logger.getLogger(getClass());
@@ -13,7 +15,7 @@ public class ProductPackagingParser {
 		List<String> packagingList =new ArrayList<String>();
 		try{
 		String packagingValue = packaging;
-		String packagingArr[] = packagingValue.split(",");
+		String packagingArr[] = packagingValue.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 		
 		for (String tempPackaging : packagingArr) {
  			packagingList.add(tempPackaging);

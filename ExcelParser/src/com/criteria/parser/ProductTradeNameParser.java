@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import com.excel.ApplicationConstants;
+
 public class ProductTradeNameParser {
            
 	private Logger              _LOGGER              = Logger.getLogger(getClass());
@@ -13,7 +15,7 @@ public class ProductTradeNameParser {
 		List<String> tradenameList =new ArrayList<String>();
 		try{
 		String tradeNameValue = tradename;
-		String tradeArr[] = tradeNameValue.split(",");
+		String tradeArr[] = tradeNameValue.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 		
 		for (String tempTrade : tradeArr) {
  			tradenameList.add(tempTrade);

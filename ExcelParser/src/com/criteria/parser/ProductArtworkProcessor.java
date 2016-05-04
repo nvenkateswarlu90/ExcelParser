@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import com.a4.product.beans.Artwork;
+import com.excel.ApplicationConstants;
 
 public class ProductArtworkProcessor {
 
@@ -17,18 +18,18 @@ public class ProductArtworkProcessor {
 		
 		
 		Artwork artObj=null;
-		String artArr[]= artwork.split(",");
+		String artArr[]= artwork.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 		
 	     for (String tempArt : artArr) {
 			artObj=new Artwork();
-			String tempValues[]=tempArt.split(":");
+			String tempValues[]=tempArt.split(ApplicationConstants.CONST_DELIMITER_COLON);
 			
 			if(tempValues.length==2){
 				artObj.setValue(tempValues[0]);
 				artObj.setComments(tempValues[1]);
 			}else if(tempValues.length==1){
 				artObj.setValue(tempValues[0]);
-				artObj.setComments("");
+				artObj.setComments(ApplicationConstants.CONST_STRING_EMPTY);
 			}
 			
 			artworkList.add(artObj);

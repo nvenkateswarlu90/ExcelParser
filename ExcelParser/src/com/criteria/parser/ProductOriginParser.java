@@ -5,6 +5,8 @@ import java.util.List;
 
 import org.apache.log4j.Logger;
 
+import com.excel.ApplicationConstants;
+
 
 public class ProductOriginParser {
 
@@ -14,7 +16,7 @@ public class ProductOriginParser {
 		List<String> originList =new ArrayList<String>();
 		try{ 
 		String originValue = origin;
-		String originArr[] = originValue.split(",");
+		String originArr[] = originValue.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 		
 		for (String tempOrigin : originArr) {
  			originList.add(tempOrigin);

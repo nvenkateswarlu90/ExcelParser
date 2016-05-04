@@ -6,6 +6,7 @@ import java.util.List;
 import org.apache.log4j.Logger;
 
 import com.a4.product.beans.Shape;
+import com.excel.ApplicationConstants;
 
 public class ProductShapeParser {
 
@@ -15,7 +16,7 @@ public class ProductShapeParser {
 		List<Shape> shapeList=new ArrayList<Shape>();
 		try{
 		Shape shapeObj;
-		String shapeArr[]=shape.split(",");
+		String shapeArr[]=shape.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 		
 		for (String string : shapeArr) {
 			shapeObj=new Shape();
