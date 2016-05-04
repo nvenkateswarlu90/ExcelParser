@@ -10,13 +10,12 @@ import org.apache.log4j.Logger;
 import com.a4.product.beans.Inventory;
 import com.a4.product.beans.ProductSKUConfiguration;
 import com.a4.product.beans.ProductSkus;
+import com.excel.ApplicationConstants;
 import com.excel.CommonUtilites;
 
 public class ProductSkuParser {
 
 	private Logger              _LOGGER              = Logger.getLogger(getClass());
-	List<String> ab = new ArrayList<String>();
-
 	
 	public ProductSkus getProductRelationSkus(String skuCriteria1, String skuCriteria2,
 			   String sku, String skuinventoryLink, String skuinventoryStatus,
@@ -34,7 +33,7 @@ public class ProductSkuParser {
 			  
 			  pskuObj.setSKU(sku);
 			  if(skuCriteria1!=null && !skuCriteria1.isEmpty()){
-			   String pskuArr[]=skuCriteria1.split(":");
+			   String pskuArr[]=skuCriteria1.split(ApplicationConstants.CONST_DELIMITER_COLON);
 			   configObj=new ProductSKUConfiguration();
 			   Value= new ArrayList<Object>();
 			   configObj.setCriteria(criCodeMap.get(pskuArr[0]));
@@ -46,7 +45,7 @@ public class ProductSkuParser {
 			  }
 			  
 			  if(skuCriteria2!=null && !skuCriteria2.isEmpty()){
-			   String pskuArr[]=skuCriteria2.split(":");
+			   String pskuArr[]=skuCriteria2.split(ApplicationConstants.CONST_DELIMITER_COLON);
 			   configObj=new ProductSKUConfiguration();
 			   Value= new ArrayList<Object>();
 			   configObj.setCriteria(criCodeMap.get(pskuArr[0]));
@@ -64,21 +63,21 @@ public class ProductSkuParser {
 			  if(skuinventoryLink!=null && !skuinventoryLink.isEmpty()){
 			   inventory.setInventoryLink(skuinventoryLink);
 			  }else{
-			   inventory.setInventoryLink("");
+			   inventory.setInventoryLink(ApplicationConstants.CONST_STRING_EMPTY);
 			  }
 			  if(skuinventoryStatus!=null && !skuinventoryStatus.isEmpty()){
 			   inventory.setInventoryStatus(skuinventoryStatus);
 			  }else{
-			   inventory.setInventoryStatus("");
+			   inventory.setInventoryStatus(ApplicationConstants.CONST_STRING_EMPTY);
 			  }
 			  if(skuinventoryQty!=null && !skuinventoryQty.isEmpty()){
 			   inventory.setInventoryQuantity(skuinventoryQty);
 			  }else{
-			   inventory.setInventoryQuantity("");
+			   inventory.setInventoryQuantity(ApplicationConstants.CONST_STRING_EMPTY);
 			  }
 			  pskuObj.setInventory(inventory);
 			  }catch(Exception e){
-				_LOGGER.error("Error while processing Shape :"+e.getMessage());            
+				_LOGGER.error("Error while processing Product SKUs :"+e.getMessage());            
 			    return null;
 			     }
 			  return pskuObj;

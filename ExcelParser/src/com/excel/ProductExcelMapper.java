@@ -43,6 +43,7 @@ import com.criteria.parser.ProductRushTimeParser;
 import com.criteria.parser.ProductSameDayParser;
 import com.criteria.parser.ProductSampleParser;
 import com.criteria.parser.ProductShapeParser;
+import com.criteria.parser.ProductSizeParser;
 import com.criteria.parser.ProductThemeParser;
 import com.criteria.parser.ProductTradeNameParser;
 import com.criteria.parser.ProductionTimeParser;
@@ -51,7 +52,6 @@ import com.a4.product.beans.ShippingEstimate;
 import com.a4.product.beans.Size;
 import com.criteria.parser.PersonlizationParser;
 import com.criteria.parser.ShippingEstimationParser;
-import com.criteria.parser.SizeParser;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -137,7 +137,7 @@ public class ProductExcelMapper {
 			ProductSampleParser sampleParser =new ProductSampleParser();
 			PersonlizationParser personalizationParser=new PersonlizationParser();
 			ShippingEstimationParser shipinestmt = new ShippingEstimationParser();
-			SizeParser sizeParser=new SizeParser();
+			ProductSizeParser sizeParser=new ProductSizeParser();
 			ProductPackagingParser packagingParser=new ProductPackagingParser();
 			ProductTradeNameParser tradeNameParser=new ProductTradeNameParser();
 			ProductImprintMethodParser imprintMethodParser=new ProductImprintMethodParser();
@@ -654,7 +654,7 @@ public class ProductExcelMapper {
 				case 147:
 					//int InQuantity= cell.getStringCellValue();
 					int InQuantity = (int) cell.getNumericCellValue();
-					skuObj=skuparserobj.getProductRelationSkus(SKUCriteria1, SKUCriteria2, skuvalue, Inlink, Instatus,InQuantity);
+					skuObj=skuparserobj.getProductRelationSkus(SKUCriteria1, SKUCriteria2, skuvalue, Inlink, Instatus,Integer.toString(InQuantity));
 					
 					
 					if(!StringUtils.isEmpty(skuObj.getSKU())){

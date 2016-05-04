@@ -18,7 +18,9 @@ public class ApplicationConstants {
     public static final String  CONST_DELIMITER_SEMICOLON =";";
     public static final String  CONST_VALUE_TYPE_DIMENSION = "Dimension";
     public static final String  CONST_VALUE_TYPE_CAPACITY = "Capacity";
-    public static final String  CONST_VALUE_TYPE_Volume = "Volume";
+    public static final String  CONST_VALUE_TYPE_VOLUME = "Volume";
+    public static final String  CONST_VALUE_TYPE_APPAREL = "Apparel";
+    public static final String  CONST_VALUE_TYPE_OTHER = "Other";
     
     
     
