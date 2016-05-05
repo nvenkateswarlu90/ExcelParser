@@ -9,6 +9,7 @@ import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+import java.util.Set;
 
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
@@ -22,11 +23,13 @@ import org.springframework.util.StringUtils;
 import com.a4.product.beans.Color;
 import com.a4.product.beans.Inventory;
 import com.a4.product.beans.Personalization;
+import com.a4.product.beans.PriceGrid;
 import com.a4.product.beans.Product;
 import com.a4.product.beans.ProductConfigurations;
 import com.a4.product.beans.RushTime;
 import com.a4.product.beans.SameDayRush;
 import com.a4.product.beans.Samples;
+import com.criteria.parser.PriceGridParser;
 import com.criteria.parser.ProductColorParser;
 import com.criteria.parser.ProductOriginParser;
 import com.criteria.parser.ProductPackagingParser;
@@ -36,6 +39,8 @@ import com.criteria.parser.ProductSampleParser;
 import com.criteria.parser.ProductThemeParser;
 import com.a4.product.beans.ShippingEstimate;
 import com.a4.product.beans.Size;
+import com.a4tech.product.lookupData.LookupData;
+import com.a4tech.product.util.ApplicationConstants;
 import com.criteria.parser.PersonlizationParser;
 import com.criteria.parser.ShippingEstimationParser;
 import com.criteria.parser.SizeParser;
@@ -49,7 +54,7 @@ public class ProductExcelMapper {
 
 
 	public static void main(String[] args) throws IOException, EncryptedDocumentException, InvalidFormatException {
-		List<Product> BeanObj = readFileUsingPOI("D:\\Excel Reader\\productv2.xlsx");
+		List<Product> BeanObj = readFileUsingPOI("E:\\productv2.xlsx");
 		if(BeanObj==null){
 			// log error or write business logic
 			System.out.println("there was an error while prcessing this file");
@@ -61,23 +66,45 @@ public class ProductExcelMapper {
 	
 	public static synchronized List<Product> readFileUsingPOI(String path) throws IOException, EncryptedDocumentException, InvalidFormatException {
 		List<Product>   productList = new ArrayList<Product>();
+		int pricegridCount =1;
 		FileInputStream inputStream = new FileInputStream(new File(path));
 		Workbook workbook = WorkbookFactory.create(new File(path));//new XSSFWorkbook(inputStream);
-		  Product productExcelObj = new Product();
+		List<String>  productXids = new ArrayList<String>();
+		  Product productExcelObj = new Product();   
 		  ProductConfigurations productConfigObj=new ProductConfigurations();
-			
+		  String externalProductId = null;
+		  String currencyType = null;
+		  String priceQurFlag = null;
+		  String priceType    = null;
+		  String basePriceName = null;
+		  String priceIncludes = null;
+		  PriceGridParser priceGridParser = new PriceGridParser();
+		  String upChargeName = null;
+		  String upChargeQur = null;
+		  String upchargeType = null;
+		  String upChargeDetails = null;
+		  String upChargeLevel = null;
+		  List<PriceGrid> priceGrids = new ArrayList<PriceGrid>();
 		try{
 		
 	    Sheet sheet = workbook.getSheetAt(0);
 		Iterator<Row> iterator = sheet.iterator();
-		
+		StringBuilder listOfQuantity = new StringBuilder();
+		StringBuilder listOfPrices = new StringBuilder();
+		StringBuilder listOfDiscount = new StringBuilder();
+		StringBuilder basePriceCriteria =  new StringBuilder();
+		StringBuilder UpCharQuantity = new StringBuilder();
+		StringBuilder UpCharPrices = new StringBuilder();
+		StringBuilder UpCharDiscount = new StringBuilder();
+		StringBuilder UpCharCriteria = new StringBuilder();
+		//StringBuilder UpCharCriteria2 = new StringBuilder();
 		while (iterator.hasNext()) {
 			Row nextRow = iterator.next();
 		System.out.println("roooowwwwwww numberrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr  "+nextRow.getRowNum());
 			if (nextRow.getRowNum() == 0)
 				continue;
 			Iterator<Cell> cellIterator = nextRow.cellIterator();
-			
+			//cellIterator.n
 			RushTime rushTime =new RushTime();
 			SameDayRush sameDayObj=new SameDayRush();
 			Samples samples=new Samples();
@@ -107,6 +134,7 @@ public class ProductExcelMapper {
 			Inventory inventoryObj = new Inventory();
 	        Size sizeObj = new Size();
 			ShippingEstimate ShipingItem = new ShippingEstimate();
+			
 		
 			
 			String shippingitemValue = null;
@@ -114,22 +142,25 @@ public class ProductExcelMapper {
 			String sizeGroup=null;
 			String rushService=null;
 			String prodSample=null;
-			
+			String quantity = null;
+			 productXids.add(externalProductId);
 			
 			while (cellIterator.hasNext()) {
 				Cell cell = cellIterator.next();
 				int columnIndex = cell.getColumnIndex();
+				if(productXids.size() > 2 && !LookupData.isRepeateIndex(String.valueOf(columnIndex+1))){
+					continue;
+				}
 
 				switch (columnIndex + 1) {
 				case 1:
-					String externalProductId = cell.getStringCellValue();
+					 externalProductId = cell.getStringCellValue();
 					/*if(externalProductId==null || externalProductId.isEmpty()){
 						rowFlag=true;
 						break;
 					}*/
 					productExcelObj.setExternalProductId(externalProductId);
 					// //System.out.println("external id is " +externalProductId);
-					System.out.println("case 1");
 					break;
 					
 				case 2:
@@ -141,7 +172,7 @@ public class ProductExcelMapper {
 						productExcelObj.setName("");
 					}
 					// //System.out.println("product name is " +name);
-					System.out.println("case 2");
+					//System.out.println("case 2");
 					break;
 				case 3:
 					int asiProdNo = (int) cell.getNumericCellValue();
@@ -155,7 +186,7 @@ public class ProductExcelMapper {
 					}else{
 						productExcelObj.setProductLevelSku("");
 					}
-					System.out.println("case 4");
+					//System.out.println("case 4");
 					break;
 					
 				case 5:
@@ -216,7 +247,6 @@ public class ProductExcelMapper {
 					}
 					productExcelObj.setCategories(categories);
 					}
-					//System.out.println(columnIndex + "Category " + categories);
 					break;
 
 				case 13:
@@ -227,8 +257,6 @@ public class ProductExcelMapper {
 						productKeywords.add(string);
 					}
 					productExcelObj.setProductKeywords(productKeywords);
-					//System.out.println(columnIndex + "Keyword "
-						//	+ productKeywords);
 					}
 					break;
 					
@@ -246,16 +274,13 @@ public class ProductExcelMapper {
 					
 				case 16:
 					 sizeGroup = cell.getStringCellValue();	
-					 System.out.println("case 16");
 				break;
 				
 				case 17:
 					
 					String sizeValue = cell.getStringCellValue();
-					System.out.println("case 17");
 					sizeObj=sizeParser.getSizes(sizeGroup,sizeValue);
 					productConfigObj.setSizes(sizeObj);
-					System.out.println("Size Info is  "  +sizeObj);
 					
 				break;
 				
@@ -264,10 +289,9 @@ public class ProductExcelMapper {
 					if(!StringUtils.isEmpty(themeValue)){
 					themes=themeParser.getThemeCriteria(themeValue);
 					if(themes!=null){
-					productConfigObj.setThemes(themes);
+						productConfigObj.setThemes(themes);
 					}
 					}
-					//System.out.println(columnIndex + "Theme " + themes);
 					break;
 					
 				case 21:
@@ -275,10 +299,10 @@ public class ProductExcelMapper {
 					if(!StringUtils.isEmpty(originValue)){
 					origin=originParser.getOriginCriteria(originValue);
 					if(origin!=null){
-					productConfigObj.setOrigins(origin);
+						productConfigObj.setOrigins(origin);
 					}
 					}
-					System.out.println("case 21");
+					//System.out.println("case 21");
 					
 					break;
 					
@@ -301,14 +325,12 @@ public class ProductExcelMapper {
 					if(!StringUtils.isEmpty(persnlization)){
 					personalizationlist = personalizationParser.getPersonalization(persnlization);
 					productConfigObj.setPersonalization(personalizationlist);
-					System.out.println("case 33");
 					}
 					break;
 					
 					
 				case 38:
 					prodSample = cell.getStringCellValue();
-					////System.out.println(columnIndex + "prodSample " + prodSample);
 					break;
 					
 				case 39:
@@ -321,7 +343,6 @@ public class ProductExcelMapper {
 					if(samples!=null){
 					productConfigObj.setSamples(samples);
 					}
-					//System.out.println(columnIndex + "samples " + samples);
 					break;
 					
 					
@@ -353,11 +374,10 @@ public class ProductExcelMapper {
 				case 44:
 					String packagingValue=cell.getStringCellValue();
 					if(!StringUtils.isEmpty(packagingValue)){
-					packaging=packagingParser.getPackagingCriteria(packagingValue);
-					if(packaging!=null){
-					productConfigObj.setPackaging(packaging);
-					//System.out.println(columnIndex + "packaging " + packaging);
-					}
+						  packaging=packagingParser.getPackagingCriteria(packagingValue);
+						  if(packaging!=null){
+							 productConfigObj.setPackaging(packaging);
+					     }
 					}
 					break;
 				case 45:
@@ -366,7 +386,7 @@ public class ProductExcelMapper {
 					
 				case 46:
 					shippingdimensionValue = cell.getStringCellValue();
-					System.out.println("case 46");
+					//System.out.println("case 46");
 					break;
 					
 				case 47:
@@ -376,15 +396,13 @@ public class ProductExcelMapper {
 							shippingitemValue, shippingdimensionValue,
 							shippingWeightValue);
 					productConfigObj.setShippingEstimates(ShipingItem);
-					System.out.println("case 47");
+					//System.out.println("case 47");
 					break;
 					
 				case 48:
 					String shipperBillsBy = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(shipperBillsBy)){
 					productExcelObj.setShipperBillsBy(cell.getStringCellValue());
-					// //System.out.println("summary of product is "
-					// +shipperBillsBy);
 					}else{
 						productExcelObj.setShipperBillsBy("");
 					}
@@ -398,18 +416,19 @@ public class ProductExcelMapper {
 					}else{
 						productExcelObj.setAdditionalShippingInfo("");	
 					}
-					System.out.println("case 49");
+					//System.out.println("case 49");
 					break;
 					
 				case 50:
 					String canShipInPlainBox = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(canShipInPlainBox)){
-					if (canShipInPlainBox.trim().equalsIgnoreCase("Y")) {
-						productExcelObj.setCanShipInPlainBox(true);
-					} else {
-						productExcelObj.setCanShipInPlainBox(false);
-					}
-					}else{ productExcelObj.setCanShipInPlainBox(false);
+						if (canShipInPlainBox.trim().equalsIgnoreCase("Y")) {
+							productExcelObj.setCanShipInPlainBox(true);
+						} else {
+							productExcelObj.setCanShipInPlainBox(false);
+						}
+						}else { 
+							productExcelObj.setCanShipInPlainBox(false);
 					}
 					// //System.out.println("ship plain box"
 					// +cell.getStringCellValue());
@@ -447,7 +466,6 @@ public class ProductExcelMapper {
 					} 
 					productExcelObj.setSafetyWarnings(safetyWarnings);
 					}
-					//System.out.println(columnIndex + "safety warning "+ safetyWarnings);
 					break;
 
 				case 54:
@@ -457,7 +475,6 @@ public class ProductExcelMapper {
 					}else{
 						productExcelObj.setAdditionalProductInfo("");
 					}
-					//System.out.println(columnIndex + "prod info "+ additionalProductInfo);
 					break;
 
 				case 55:
@@ -468,7 +485,6 @@ public class ProductExcelMapper {
 					else{
 						productExcelObj.setDistributorOnlyComments("");
 					}
-					//System.out.println(columnIndex + "distributor comments "+ distributorOnlyComments);
 					break;
 
 				case 56:
@@ -479,28 +495,112 @@ public class ProductExcelMapper {
 					else{
 						productExcelObj.setProductDisclaimer("");
 					} 
-					System.out.println(columnIndex + "productDisclaimer "+ productDisclaimer);
 					break;
+				case 57:
+					basePriceName = cell.getStringCellValue();
+					break;
+				case 58:
+					String criteria1 = cell.getStringCellValue();
+					if(!StringUtils.isEmpty(criteria1)){
+						basePriceCriteria.append(criteria1).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
+					}
+					break;
+				case 59:
+					String criteria2 = cell.getStringCellValue();
+					if(!StringUtils.isEmpty(criteria2)){
+						basePriceCriteria.append(criteria2);
+					}
+				case 60:
+				case 61:
+				case 62:
+				case 63:
+				case 64:
+				case 65:
+				case 66:
+				case 67:
+				case 68:
+				case 69:
+					if(cell.getCellType() == Cell.CELL_TYPE_STRING){
+						quantity = cell.getStringCellValue();
+				         if(!StringUtils.isEmpty(quantity)){
+				        	 listOfQuantity.append(quantity).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
+				         }
+					}else if(cell.getCellType() == Cell.CELL_TYPE_NUMERIC){
+						int quantity1 = (int)cell.getNumericCellValue();
+				         if(!StringUtils.isEmpty(quantity1)){
+				        	 listOfQuantity.append(quantity1).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
+				         }
+					}else{
+						
+					}
+			          break;
+				case 70:
+				case 71:
+				case 72:
+				case 73:
+				case 74:
+				case 75:
+				case 76:
+				case 77:
+				case 78:
+				case 79:       
+					if(cell.getCellType() == Cell.CELL_TYPE_STRING){
+					quantity = cell.getStringCellValue();
+			         if(!StringUtils.isEmpty(quantity)){
+			        	 listOfPrices.append(quantity).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
+			         }
+				}else if(cell.getCellType() == Cell.CELL_TYPE_NUMERIC){
+					double quantity1 = (double)cell.getNumericCellValue();
+			         if(!StringUtils.isEmpty(quantity1)){
+			        	 listOfPrices.append(quantity1).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
+			         }
+				}else{
 					
+				}
+					            break;
+				case 80:
+				case 81:
+				case 82:
+				case 83:
+				case 84:
+				case 85:
+				case 86:
+				case 87:
+				case 88:
+				case 89:
+					
+					quantity = cell.getStringCellValue();
+			         if(!StringUtils.isEmpty(quantity)){
+			        	 listOfDiscount.append(quantity).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
+			         }
+					          break;
+				case 91:
+					   priceIncludes = cell.getStringCellValue();
+					   break;
+				case 93:
+					 currencyType = cell.getStringCellValue();
 				case 94:
-					//System.out.println(columnIndex + "canOrderLessThanMinimum "+ cell.getBooleanCellValue());
-					if(!StringUtils.isEmpty(String.valueOf(cell.getBooleanCellValue()))){
-					productExcelObj.setCanOrderLessThanMinimum(cell.getBooleanCellValue());
-					}else
-					{
+					if(cell.getCellType() ==  Cell.CELL_TYPE_BOOLEAN){
+						if(!StringUtils.isEmpty(String.valueOf(cell.getBooleanCellValue()))){
+							productExcelObj.setCanOrderLessThanMinimum(cell.getBooleanCellValue());
+							}else
+							{
+								productExcelObj.setCanOrderLessThanMinimum(false);
+							} 
+					}else{
 						productExcelObj.setCanOrderLessThanMinimum(false);
-					} 
+					}
+					
 					
 					break;
 
 				case 95:
-					String priceType = cell.getStringCellValue();
+					 priceType = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(priceType)){
 					productExcelObj.setPriceType(priceType);
 					}else{
 						productExcelObj.setPriceType("");
 					}
-					//System.out.println(columnIndex + "priceType " + priceType);
 					break;
 
 				case 96:
@@ -511,13 +611,111 @@ public class ProductExcelMapper {
 					}else{
 						productExcelObj.setBreakOutByPrice(false);	
 					}
-					// //System.out.println("Breakoutbyprice" +breakOutByPrice);
 					break;
+				case 97:
+					upChargeName = cell.getStringCellValue();
+					break;//upcharge name
+				case 98:
+					String upCriteria1= cell.getStringCellValue();
+					if(!StringUtils.isEmpty(upCriteria1)){
+						UpCharCriteria.append(upCriteria1).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
+					}
+					break;//upcharge criteria_1
+				case 99:
+					String upCriteria2= cell.getStringCellValue();
+					if(!StringUtils.isEmpty(upCriteria2)){
+						UpCharCriteria.append(upCriteria2);
+					}
+					break;//upcharge criteria_2
+				case 100:
+					upchargeType = cell.getStringCellValue();
+					break;//upcharge type
+				case 101:
+					upChargeLevel = cell.getStringCellValue();
+					break;//upcharge level
 					
+				case 102:
+				case 103:
+				case 104:
+				case 105:
+				case 106:
+				case 107:
+				case 108:
+				case 109:
+				case 110:
+				case 111:
+					if(cell.getCellType() == Cell.CELL_TYPE_STRING){
+						quantity = cell.getStringCellValue();
+				         if(!StringUtils.isEmpty(quantity)){
+				        	 UpCharQuantity.append(quantity).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
+				         }
+					}else if(cell.getCellType() == Cell.CELL_TYPE_NUMERIC){
+						int quantity1 = (int)cell.getNumericCellValue();
+				         if(!StringUtils.isEmpty(quantity1)){
+				        	 UpCharQuantity.append(quantity1).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
+				         }
+					}else{
+						
+					}
+					 break; // upcharge quanytity
+					
+				case 112:
+				case 113:
+				case 114:
+				case 115:
+				case 116:
+				case 117:
+				case 118:
+				case 119:
+				case 120:
+				case 121:
+					if(cell.getCellType() == Cell.CELL_TYPE_STRING){
+						quantity = cell.getStringCellValue();
+				         if(!StringUtils.isEmpty(quantity)){
+				        	 UpCharPrices.append(quantity).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
+				         }
+					}else if(cell.getCellType() == Cell.CELL_TYPE_NUMERIC){
+						int quantity1 = (int)cell.getNumericCellValue();
+				         if(!StringUtils.isEmpty(quantity1)){
+				        	 UpCharPrices.append(quantity1).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
+				         }
+					}else{
+						
+					}
+					 break; // upcharge prices
+				case 122:
+				case 123:
+				case 124:
+				case 125:
+				case 126:
+				case 127:
+				case 128:
+				case 129:
+				case 130:
+				case 131:
+					if(cell.getCellType() == Cell.CELL_TYPE_STRING){
+						quantity = cell.getStringCellValue();
+				         if(!StringUtils.isEmpty(quantity)){
+				        	 UpCharDiscount.append(quantity).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
+				         }
+					}else if(cell.getCellType() == Cell.CELL_TYPE_NUMERIC){
+						int quantity1 = (int)cell.getNumericCellValue();
+				         if(!StringUtils.isEmpty(quantity1)){
+				        	 UpCharDiscount.append(quantity1).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
+				         }
+					}else{
+						
+					}
+					 break; // upcharge discount
+				case 132:
+					upChargeDetails = cell.getStringCellValue();
+					break;// upcharge details
+				case 133:
+					    upChargeQur = cell.getStringCellValue();
+					break;// QUR Flag
 				case 134:
 					String priceConfirmedThru = cell.getStringCellValue();
 					productExcelObj.setPriceConfirmedThru(priceConfirmedThru);
-					//System.out.println(columnIndex + "priceConfirmedThru "+ priceConfirmedThru);
 					break;
 					
 			
@@ -530,8 +728,6 @@ public class ProductExcelMapper {
 					} else {
 						productExcelObj.setSeoFlag(false);
 					}
-					// //System.out.println("distributorViewOnly "
-					// +cell.getStringCellValue());
 					break;
 					
 				case 149:
@@ -541,35 +737,51 @@ public class ProductExcelMapper {
 					} else {
 						productExcelObj.setSeoFlag(false);
 					}
-					System.out.println("case 149 " +cell.getStringCellValue());
 					break;
 				}
 				
 				productExcelObj.setProductConfigurations(productConfigObj);
-			}
-			
-			ObjectMapper mapper = new ObjectMapper();
-			try {
-				File json = new File("D:\\Excel Reader\\file.json");
-			mapper.writeValue(json, productExcelObj);
-			System.out.println("/////////////////////////////////////////");
-			System.out.println("Java object converted to JSON String, written to file");
-			System.out.println(mapper.writeValueAsString(productExcelObj)); 
-			System.out.println("/////////////////////////////////////////");
-			} catch (JsonGenerationException ex) 
-			{ ex.printStackTrace(); 
 			} 
-			catch (JsonMappingException ex) {
-				ex.printStackTrace(); 
-				} 
-			catch (IOException ex)
-			{ ex.printStackTrace();
-			}
-
 			productList.add(productExcelObj);
+			if((!listOfPrices.toString().isEmpty() && priceQurFlag == null) || (listOfPrices.toString().isEmpty() && priceQurFlag != null)){
+				priceGrids = priceGridParser.getPriceGrids(listOfPrices.toString(), listOfQuantity.toString(), listOfDiscount.toString(), currencyType,
+						priceIncludes, true, priceQurFlag, basePriceName,basePriceCriteria.toString(),priceGrids);	
+			}
+			 
+				if(UpCharCriteria != null && !UpCharCriteria.toString().isEmpty()){
+					priceGrids = priceGridParser.getUpchargePriceGrid(UpCharQuantity.toString(), UpCharPrices.toString(), UpCharDiscount.toString(), UpCharCriteria.toString(), 
+							 upChargeQur, currencyType, upChargeName, upchargeType, upChargeLevel, new Integer(1), priceGrids);
+				}
+				upChargeQur = null;
+				UpCharCriteria = new StringBuilder();
+				priceQurFlag = null;
+				listOfPrices = new StringBuilder();
+				UpCharPrices = new StringBuilder();
+				UpCharDiscount = new StringBuilder();
+				UpCharQuantity = new StringBuilder();
 		}
 		workbook.close();
 		inputStream.close();
+		
+		productExcelObj.setPriceGrids(priceGrids);
+		productList.add(productExcelObj);
+		ObjectMapper mapper = new ObjectMapper();
+		try {
+			File json = new File("D:\\Excel Reader\\file.json");
+		mapper.writeValue(json, productExcelObj);
+		System.out.println("/////////////////////////////////////////");
+		System.out.println("Java object converted to JSON String, written to file");
+		System.out.println(mapper.writeValueAsString(productExcelObj)); 
+		System.out.println("/////////////////////////////////////////");
+		} catch (JsonGenerationException ex) 
+		{ ex.printStackTrace(); 
+		} 
+		catch (JsonMappingException ex) {
+			ex.printStackTrace(); 
+			} 
+		catch (IOException ex)
+		{ ex.printStackTrace();
+		}
 		}catch(Exception e){
 			e.printStackTrace();
 			// log error over here
