@@ -4,22 +4,15 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
-import java.util.HashMap;
-import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
-import java.util.Map;
-import java.util.Set;
+
 import org.apache.log4j.Logger;
-import org.apache.log4j.Logger;
-import org.apache.poi.EncryptedDocumentException;
-import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
-import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.util.StringUtils;
 
 import com.a4.product.beans.Artwork;
@@ -35,8 +28,13 @@ import com.a4.product.beans.ProductionTime;
 import com.a4.product.beans.RushTime;
 import com.a4.product.beans.SameDayRush;
 import com.a4.product.beans.Samples;
-import com.criteria.parser.PriceGridParser;
 import com.a4.product.beans.Shape;
+import com.a4.product.beans.ShippingEstimate;
+import com.a4.product.beans.Size;
+import com.a4tech.product.lookupData.LookupData;
+//import com.a4tech.product.util.ApplicationConstants;
+import com.criteria.parser.PersonlizationParser;
+import com.criteria.parser.PriceGridParser;
 import com.criteria.parser.ProductArtworkProcessor;
 import com.criteria.parser.ProductColorParser;
 import com.criteria.parser.ProductImprintMethodParser;
@@ -47,15 +45,10 @@ import com.criteria.parser.ProductSameDayParser;
 import com.criteria.parser.ProductSampleParser;
 import com.criteria.parser.ProductShapeParser;
 import com.criteria.parser.ProductSizeParser;
+import com.criteria.parser.ProductSkuParser;
 import com.criteria.parser.ProductThemeParser;
 import com.criteria.parser.ProductTradeNameParser;
 import com.criteria.parser.ProductionTimeParser;
-import com.criteria.parser.ProductSkuParser;
-import com.a4.product.beans.ShippingEstimate;
-import com.a4.product.beans.Size;
-import com.a4tech.product.lookupData.LookupData;
-import com.a4tech.product.util.ApplicationConstants;
-import com.criteria.parser.PersonlizationParser;
 import com.criteria.parser.ShippingEstimationParser;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
@@ -72,7 +65,7 @@ public class ProductExcelMapper {
 		try
 		{
 		ProductExcelMapper djvsd= new ProductExcelMapper();
-		List<Product> BeanObj = djvsd.readFileUsingPOI("D:\\A4 ESPUpdate\\Excel File\\v2\\productv2.xlsx");
+		List<Product> BeanObj = djvsd.readFileUsingPOI("E:\\productv2.xlsx");
 		if(BeanObj==null){
 			// log error or write business logic
 			System.out.println("there was an error while prcessing this file");
@@ -87,7 +80,6 @@ public class ProductExcelMapper {
 	
 	public  synchronized List<Product> readFileUsingPOI(String path)   {
 		List<Product>   productList = new ArrayList<Product>();
-		int pricegridCount =1;
 		_LOGGER.info("Reading Excel file from File Path"+path.substring(path.lastIndexOf("\\")) );
 		FileInputStream inputStream = null;
 		Workbook workbook = null;
@@ -113,8 +105,8 @@ public class ProductExcelMapper {
 			_LOGGER.info("Creating & Initializing Workbook");
 			  workbook = WorkbookFactory.create(new File(path));//new XSSFWorkbook(inputStream);
 			_LOGGER.info("Workbook Object created");
-			  Product productExcelObj = new Product();
-			  ProductConfigurations productConfigObj=new ProductConfigurations();
+			  //Product productExcelObj = new Product();
+			  //ProductConfigurations productConfigObj=new ProductConfigurations();
 	    _LOGGER.info("Processing WorkSheet");
 	    Sheet sheet = workbook.getSheetAt(0);
 		Iterator<Row> iterator = sheet.iterator();
@@ -205,7 +197,7 @@ public class ProductExcelMapper {
 
 				switch (columnIndex + 1) {
 				case 1:
-					String externalProductId = cell.getStringCellValue();
+					 externalProductId = cell.getStringCellValue();
 					_LOGGER.info("Processing Product :"+ externalProductId);
 					_LOGGER.info("Processing Product :"+ externalProductId);
 					/*if(externalProductId==null || externalProductId.isEmpty()){
@@ -880,7 +872,9 @@ public class ProductExcelMapper {
 				}
 				
 				productExcelObj.setProductConfigurations(productConfigObj);
-			} }catch(Exception e){
+			} 
+			
+			}catch(Exception e){
 			//e.printStackTrace();
 			_LOGGER.error("Error while Processing Product :"+productExcelObj.getExternalProductId() );
 			
@@ -903,6 +897,7 @@ public class ProductExcelMapper {
 				UpCharPrices = new StringBuilder();
 				UpCharDiscount = new StringBuilder();
 				UpCharQuantity = new StringBuilder();
+		}
 		workbook.close();
 		inputStream.close();
 		
@@ -925,6 +920,7 @@ public class ProductExcelMapper {
 		catch (IOException ex)
 		{ ex.printStackTrace();
 		}
+		//}
 		}catch(Exception e){
 			//e.printStackTrace();
 			_LOGGER.error("Error while Processing excel sheet :"+path.substring(path.lastIndexOf("\\")) +e.getMessage());
