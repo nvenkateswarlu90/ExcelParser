@@ -3,22 +3,27 @@ package com.criteria.parser;
 import java.util.ArrayList;
 import java.util.List;
 
-public class ProductThemeParser {
+import org.apache.log4j.Logger;
 
+import com.excel.ApplicationConstants;
+
+public class ProductThemeParser {
+ 
+	private Logger              _LOGGER              = Logger.getLogger(getClass());
 	
 	public List<String> getThemeCriteria(String theme){
 		
 		List<String> themeList =new ArrayList<String>();
 		try{
 		String themeValue = theme;
-		String themeArr[] = themeValue.split(",");
+		String themeArr[] = themeValue.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 		
 		for (String tempTheme : themeArr) {
  			themeList.add(tempTheme);
 		}
 		return themeList;
 		}catch(Exception e){
-	         //need to log error over here             
+			_LOGGER.error("Error while processing Product Theme :"+e.getMessage());            
 		   	return null;
 		 }
 	}

@@ -3,11 +3,16 @@ package com.criteria.parser;
 import java.util.ArrayList;
 import java.util.List;
 
+import org.apache.log4j.Logger;
+
 import com.a4.product.beans.Color;
 import com.a4.product.beans.Combo;
+import com.excel.ApplicationConstants;
 
 public class ProductColorParser {
-	 private final static String COMBO_VALUES_SEPARATOR = ":";
+	private Logger              _LOGGER              = Logger.getLogger(getClass()); 
+	
+	private final static String COMBO_VALUES_SEPARATOR = ":";
 	 private final static Integer COMBO_TEXT_VALUE_INDEX = 1;
 	 public static final String   CONST_STRING_COMBO_TEXT = "Combo";
 	   
@@ -16,7 +21,7 @@ public class ProductColorParser {
 		
 		try{
 		Color colorObj;
-		String colorArr[]=color.split(",");
+		String colorArr[]=color.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 		 boolean isCombo=false;
 		 List<Combo> comboList=null;
 		 Combo comboObj=new Combo();
@@ -27,7 +32,7 @@ public class ProductColorParser {
 			
             String originalValue = value;
             String teampValue=value;
-            int index = value.indexOf("=");
+            int index = value.indexOf(ApplicationConstants.CONST_STRING_EQUAL);
 
             if (index != -1) {
                 value = value.substring(0, index);
@@ -42,23 +47,23 @@ public class ProductColorParser {
             	colorObj.setAlias(originalValue);
             	colorList.add(colorObj);
             }else{ 
-        		String colorArray[]=value.split(":");
+        		String colorArray[]=value.split(ApplicationConstants.CONST_DELIMITER_COLON);
         		
         		String name=colorArray[0];
         		
         		String alias=null;
-                 int indexAlias = teampValue.indexOf("=");
+                 int indexAlias = teampValue.indexOf(ApplicationConstants.CONST_STRING_EQUAL);
                  
                  if (indexAlias != -1) {
                 	 alias = teampValue.substring(indexAlias + 1);
                  }
-                 int comboIndex=teampValue.indexOf("Combo");
+                 int comboIndex=teampValue.indexOf(CONST_STRING_COMBO_TEXT);
                  String comboStr=teampValue.substring(comboIndex+6);//(comboIndex + 6);
-                 String FinalComboStr=comboStr.substring(0, comboStr.indexOf("="));
+                 String FinalComboStr=comboStr.substring(0, comboStr.indexOf(ApplicationConstants.CONST_STRING_EQUAL));
                  //System.out.println("FinalComboStr "+FinalComboStr);
                  	 
                  
-                 String finalarray[]=FinalComboStr.split(":");
+                 String finalarray[]=FinalComboStr.split(ApplicationConstants.CONST_DELIMITER_COLON);
                  if(finalarray.length==2){
                 	 Color colorObj1=new Color();
                 	 colorObj1.setName(name);
@@ -92,7 +97,7 @@ public class ProductColorParser {
 		}
 
 		}catch(Exception e){
-		//need to log error over here
+			_LOGGER.error("Error while processing Color :"+e.getMessage());
          return null;	
          }
 		

@@ -1,32 +1,38 @@
 package com.criteria.parser;
 
+import org.apache.log4j.Logger;
+
 import com.a4.product.beans.SameDayRush;
+import com.excel.ApplicationConstants;
 
 public class ProductSameDayParser {
+	
+	private Logger              _LOGGER              = Logger.getLogger(getClass());
+	
 	public SameDayRush getSameDayRush(String value){
 		SameDayRush sdayObj=new SameDayRush();
 		try{
-		if(value.contains(":")){
-		String samedyArr[]=value.split(":");
+		if(value.contains(ApplicationConstants.CONST_DELIMITER_COLON)){
+		String samedyArr[]=value.split(ApplicationConstants.CONST_DELIMITER_COLON);
 		
-		if(samedyArr.length==2 && samedyArr[0].equalsIgnoreCase("Y")){
+		if(samedyArr.length==2 && samedyArr[0].equalsIgnoreCase(ApplicationConstants.CONST_CHAR_Y)){
 			sdayObj.setAvailable(true);
 			sdayObj.setDetails(samedyArr[1]);
-		}else if(samedyArr.length==1 && samedyArr[0].equalsIgnoreCase("Y")){
+		}else if(samedyArr.length==1 && samedyArr[0].equalsIgnoreCase(ApplicationConstants.CONST_CHAR_Y)){
 			sdayObj.setAvailable(true);
-			sdayObj.setDetails("");
+			sdayObj.setDetails(ApplicationConstants.CONST_STRING_EMPTY);
 		}
-		}else if(value.equalsIgnoreCase("Y")){
+		}else if(value.equalsIgnoreCase(ApplicationConstants.CONST_CHAR_Y)){
 			sdayObj.setAvailable(true);
-			sdayObj.setDetails("");
+			sdayObj.setDetails(ApplicationConstants.CONST_STRING_EMPTY);
 		}else{
 			sdayObj.setAvailable(false);
-			sdayObj.setDetails("");
+			sdayObj.setDetails(ApplicationConstants.CONST_STRING_EMPTY);
 			
 		}
 		
 		}catch(Exception e){
-	         //need to log error over here             
+			_LOGGER.error("Error while processing SameDay Parser :"+e.getMessage());           
 		   	return null;
 		   	
 		   }

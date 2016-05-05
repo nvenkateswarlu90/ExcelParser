@@ -10,7 +10,8 @@ import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
 import java.util.Set;
-
+import org.apache.log4j.Logger;
+import org.apache.log4j.Logger;
 import org.apache.poi.EncryptedDocumentException;
 import org.apache.poi.openxml4j.exceptions.InvalidFormatException;
 import org.apache.poi.ss.usermodel.Cell;
@@ -18,32 +19,44 @@ import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
 import org.apache.poi.ss.usermodel.Workbook;
 import org.apache.poi.ss.usermodel.WorkbookFactory;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.util.StringUtils;
 
+import com.a4.product.beans.Artwork;
 import com.a4.product.beans.Color;
+import com.a4.product.beans.ImprintMethod;
 import com.a4.product.beans.Inventory;
 import com.a4.product.beans.Personalization;
 import com.a4.product.beans.PriceGrid;
 import com.a4.product.beans.Product;
 import com.a4.product.beans.ProductConfigurations;
+import com.a4.product.beans.ProductSkus;
+import com.a4.product.beans.ProductionTime;
 import com.a4.product.beans.RushTime;
 import com.a4.product.beans.SameDayRush;
 import com.a4.product.beans.Samples;
 import com.criteria.parser.PriceGridParser;
+import com.a4.product.beans.Shape;
+import com.criteria.parser.ProductArtworkProcessor;
 import com.criteria.parser.ProductColorParser;
+import com.criteria.parser.ProductImprintMethodParser;
 import com.criteria.parser.ProductOriginParser;
 import com.criteria.parser.ProductPackagingParser;
 import com.criteria.parser.ProductRushTimeParser;
 import com.criteria.parser.ProductSameDayParser;
 import com.criteria.parser.ProductSampleParser;
+import com.criteria.parser.ProductShapeParser;
+import com.criteria.parser.ProductSizeParser;
 import com.criteria.parser.ProductThemeParser;
+import com.criteria.parser.ProductTradeNameParser;
+import com.criteria.parser.ProductionTimeParser;
+import com.criteria.parser.ProductSkuParser;
 import com.a4.product.beans.ShippingEstimate;
 import com.a4.product.beans.Size;
 import com.a4tech.product.lookupData.LookupData;
 import com.a4tech.product.util.ApplicationConstants;
 import com.criteria.parser.PersonlizationParser;
 import com.criteria.parser.ShippingEstimationParser;
-import com.criteria.parser.SizeParser;
 import com.fasterxml.jackson.core.JsonGenerationException;
 import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
@@ -53,22 +66,31 @@ public class ProductExcelMapper {
 	
 
 
-	public static void main(String[] args) throws IOException, EncryptedDocumentException, InvalidFormatException {
-		List<Product> BeanObj = readFileUsingPOI("E:\\productv2.xlsx");
+	private   Logger              _LOGGER              = Logger.getLogger(getClass());
+	
+	public static void main(String[] args)  {
+		try
+		{
+		ProductExcelMapper djvsd= new ProductExcelMapper();
+		List<Product> BeanObj = djvsd.readFileUsingPOI("D:\\A4 ESPUpdate\\Excel File\\v2\\productv2.xlsx");
 		if(BeanObj==null){
 			// log error or write business logic
 			System.out.println("there was an error while prcessing this file");
 		}else{
 			System.out.println("send for posting to asi");
 		}
+		}catch(Exception e){
+			
+		}
 	}
 	
 	
-	public static synchronized List<Product> readFileUsingPOI(String path) throws IOException, EncryptedDocumentException, InvalidFormatException {
+	public  synchronized List<Product> readFileUsingPOI(String path)   {
 		List<Product>   productList = new ArrayList<Product>();
 		int pricegridCount =1;
-		FileInputStream inputStream = new FileInputStream(new File(path));
-		Workbook workbook = WorkbookFactory.create(new File(path));//new XSSFWorkbook(inputStream);
+		_LOGGER.info("Reading Excel file from File Path"+path.substring(path.lastIndexOf("\\")) );
+		FileInputStream inputStream = null;
+		Workbook workbook = null;
 		List<String>  productXids = new ArrayList<String>();
 		  Product productExcelObj = new Product();   
 		  ProductConfigurations productConfigObj=new ProductConfigurations();
@@ -86,9 +108,17 @@ public class ProductExcelMapper {
 		  String upChargeLevel = null;
 		  List<PriceGrid> priceGrids = new ArrayList<PriceGrid>();
 		try{
-		
+			  inputStream = new FileInputStream(new File(path));
+			_LOGGER.info("Completed Reading Excel file from File Path");
+			_LOGGER.info("Creating & Initializing Workbook");
+			  workbook = WorkbookFactory.create(new File(path));//new XSSFWorkbook(inputStream);
+			_LOGGER.info("Workbook Object created");
+			  Product productExcelObj = new Product();
+			  ProductConfigurations productConfigObj=new ProductConfigurations();
+	    _LOGGER.info("Processing WorkSheet");
 	    Sheet sheet = workbook.getSheetAt(0);
 		Iterator<Row> iterator = sheet.iterator();
+		_LOGGER.info("Started Processing Product");
 		StringBuilder listOfQuantity = new StringBuilder();
 		StringBuilder listOfPrices = new StringBuilder();
 		StringBuilder listOfDiscount = new StringBuilder();
@@ -99,12 +129,13 @@ public class ProductExcelMapper {
 		StringBuilder UpCharCriteria = new StringBuilder();
 		//StringBuilder UpCharCriteria2 = new StringBuilder();
 		while (iterator.hasNext()) {
+			
+			try{
 			Row nextRow = iterator.next();
-		System.out.println("roooowwwwwww numberrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrrr  "+nextRow.getRowNum());
 			if (nextRow.getRowNum() == 0)
 				continue;
 			Iterator<Cell> cellIterator = nextRow.cellIterator();
-			//cellIterator.n
+			
 			RushTime rushTime =new RushTime();
 			SameDayRush sameDayObj=new SameDayRush();
 			Samples samples=new Samples();
@@ -119,6 +150,11 @@ public class ProductExcelMapper {
 			List<Personalization> personalizationlist = new ArrayList<Personalization>();
 			List<String> packaging = new ArrayList<String>();
 			List<String> themes = new ArrayList<String>();
+			List<String> tradeName = new ArrayList<String>();
+			List<ImprintMethod> imprintMethods = new ArrayList<ImprintMethod>();
+			List<Artwork> artworkList = new ArrayList<Artwork>();
+			List<Shape> shapeList=new ArrayList<Shape>();
+			List<ProductionTime> productionTimeList = new ArrayList<ProductionTime>();
 			
 			ProductColorParser colorparser=new ProductColorParser();
 			ProductOriginParser originParser=new ProductOriginParser();
@@ -127,13 +163,22 @@ public class ProductExcelMapper {
 			ProductSampleParser sampleParser =new ProductSampleParser();
 			PersonlizationParser personalizationParser=new PersonlizationParser();
 			ShippingEstimationParser shipinestmt = new ShippingEstimationParser();
-			SizeParser sizeParser=new SizeParser();
+			ProductSizeParser sizeParser=new ProductSizeParser();
 			ProductPackagingParser packagingParser=new ProductPackagingParser();
+			ProductTradeNameParser tradeNameParser=new ProductTradeNameParser();
+			ProductImprintMethodParser imprintMethodParser=new ProductImprintMethodParser();
+			ProductArtworkProcessor artworkProcessor=new ProductArtworkProcessor();
+			ProductShapeParser shapeParser=new ProductShapeParser();
+			ProductionTimeParser productionTimeParser =new ProductionTimeParser();
 			ProductThemeParser themeParser=new ProductThemeParser();
 			//ProductConfigurations productConfigObj=new ProductConfigurations();
 			Inventory inventoryObj = new Inventory();
 	        Size sizeObj = new Size();
 			ShippingEstimate ShipingItem = new ShippingEstimate();
+			
+			List<ProductSkus> productsku=new ArrayList<ProductSkus>();
+			ProductSkus skuObj= new ProductSkus();
+			ProductSkuParser skuparserobj=new ProductSkuParser();
 			
 		
 			
@@ -142,8 +187,14 @@ public class ProductExcelMapper {
 			String sizeGroup=null;
 			String rushService=null;
 			String prodSample=null;
+			String SKUCriteria1 =null;
+			String SKUCriteria2 =null;
+			String skuvalue  =null;
+			String Inlink  =null;
+			String Instatus  =null;
 			String quantity = null;
 			 productXids.add(externalProductId);
+			 
 			
 			while (cellIterator.hasNext()) {
 				Cell cell = cellIterator.next();
@@ -154,7 +205,9 @@ public class ProductExcelMapper {
 
 				switch (columnIndex + 1) {
 				case 1:
-					 externalProductId = cell.getStringCellValue();
+					String externalProductId = cell.getStringCellValue();
+					_LOGGER.info("Processing Product :"+ externalProductId);
+					_LOGGER.info("Processing Product :"+ externalProductId);
 					/*if(externalProductId==null || externalProductId.isEmpty()){
 						rowFlag=true;
 						break;
@@ -169,7 +222,7 @@ public class ProductExcelMapper {
 					if(!StringUtils.isEmpty(name)){
 					productExcelObj.setName(cell.getStringCellValue());
 					}else{
-						productExcelObj.setName("");
+						productExcelObj.setName(ApplicationConstants.CONST_STRING_EMPTY);
 					}
 					// //System.out.println("product name is " +name);
 					//System.out.println("case 2");
@@ -184,7 +237,7 @@ public class ProductExcelMapper {
 					productExcelObj.setProductLevelSku(productLevelSku);
 					// //System.out.println("sku is " +productLevelSku);
 					}else{
-						productExcelObj.setProductLevelSku("");
+						productExcelObj.setProductLevelSku(ApplicationConstants.CONST_STRING_EMPTY);
 					}
 					//System.out.println("case 4");
 					break;
@@ -222,7 +275,7 @@ public class ProductExcelMapper {
 					if(!StringUtils.isEmpty(description)){
 					productExcelObj.setDescription(description);
 					}else{
-						productExcelObj.setDescription("");
+						productExcelObj.setDescription(ApplicationConstants.CONST_STRING_EMPTY);
 					}
 					// //System.out.println("product description is "
 					// +description);
@@ -233,15 +286,15 @@ public class ProductExcelMapper {
 					if(!StringUtils.isEmpty(summary)){
 					productExcelObj.setSummary(summary);
 					}else{
-						productExcelObj.setSummary("");
+						productExcelObj.setSummary(ApplicationConstants.CONST_STRING_EMPTY);
 					}
-					// //System.out.println("summary of product is " +summary);
+					//System.out.println("summary of product is " +summary);
 					break;
 				
 				case 12:
 					String category = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(category)){
-					String categoryArr[] = category.split(",");
+					String categoryArr[] = category.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 					for (String string : categoryArr) {
 						categories.add(string);
 					}
@@ -252,7 +305,7 @@ public class ProductExcelMapper {
 				case 13:
 					String productKeyword = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(productKeyword)){
-					String productKeywordArr[] = productKeyword.split(",");
+					String productKeywordArr[] = productKeyword.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 					for (String string : productKeywordArr) {
 						productKeywords.add(string);
 					}
@@ -284,14 +337,35 @@ public class ProductExcelMapper {
 					
 				break;
 				
+				 case 18:
+					String shapeValue=cell.getStringCellValue();
+					if(!StringUtils.isEmpty(shapeValue)){
+					shapeList=shapeParser.getShapeCriteria(shapeValue);
+					if(shapeList!=null){
+					productConfigObj.setShapes(shapeList);
+					}
+					}
+					break;
+					
 				case 19:
 					String themeValue=cell.getStringCellValue();
 					if(!StringUtils.isEmpty(themeValue)){
 					themes=themeParser.getThemeCriteria(themeValue);
 					if(themes!=null){
-						productConfigObj.setThemes(themes);
+					productConfigObj.setThemes(themes);
 					}
 					}
+					break;
+					
+					case 20:
+					String tradeValue=cell.getStringCellValue();
+					if(!StringUtils.isEmpty(tradeValue)){
+					tradeName=tradeNameParser.getTradeNameCriteria(tradeValue);
+					if(tradeName!=null){
+					productConfigObj.setTradeNames(tradeName);
+					}
+					}
+					//System.out.println(columnIndex + "tradeName " + tradeName);
 					break;
 					
 				case 21:
@@ -299,18 +373,28 @@ public class ProductExcelMapper {
 					if(!StringUtils.isEmpty(originValue)){
 					origin=originParser.getOriginCriteria(originValue);
 					if(origin!=null){
-						productConfigObj.setOrigins(origin);
+					productConfigObj.setOrigins(origin);
 					}
 					}
 					//System.out.println("case 21");
 					
 					break;
 					
+				case 28:
+					String imprintValue=cell.getStringCellValue();
+					if(!StringUtils.isEmpty(imprintValue)){
+					imprintMethods=imprintMethodParser.getImprintCriteria(imprintValue);
+					if(imprintMethods!=null){
+					productConfigObj.setImprintMethods(imprintMethods);
+					}
+					}
+					//System.out.println(columnIndex + "imprintMethods " + imprintMethods);
+					break;
 					
 				case 29:
 					String lineName = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(lineName)){
-					String lineNameArr[] = lineName.split(",");
+					String lineNameArr[] = lineName.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 					for (String string : lineNameArr) {
 						lineNames.add(string);
 					}
@@ -319,6 +403,14 @@ public class ProductExcelMapper {
 					
 					break;
 					
+				case 30:
+					String artwork = cell.getStringCellValue();
+					if(!StringUtils.isEmpty(artwork)){
+					artworkList=artworkProcessor.getArtworkCriteria(artwork);
+					if(artworkList!=null){
+					productConfigObj.setArtwork(artworkList);
+					}}
+					break;
 					
 				case 33:
 					String persnlization = cell.getStringCellValue();
@@ -345,13 +437,25 @@ public class ProductExcelMapper {
 					}
 					break;
 					
+				case 40:
+					String productionTime = cell.getStringCellValue();
+					if(!StringUtils.isEmpty(productionTime)){
+					productionTimeList=productionTimeParser.getProdTimeCriteria(productionTime);
+					if(productionTimeList!=null){
+					productConfigObj.setProductionTime(productionTimeList);
+					}
+					//System.out.println(columnIndex + "productionTimeList " + productionTimeList);
+				}
+					 
+					break;	
+					
 					
 				case 41:
 					 rushService = cell.getStringCellValue();
 					break;
 					
 				case 42:
-					if(!StringUtils.isEmpty(rushService) && !rushService.equalsIgnoreCase("N")){
+					if(!StringUtils.isEmpty(rushService) && !rushService.equalsIgnoreCase(ApplicationConstants.CONST_CHAR_N)){
 					String rushTimeValue = cell.getStringCellValue();
 					rushTime=rushTimeParser.getRushTimeCriteria(rushTimeValue);
 					if(rushTime!=null){
@@ -404,7 +508,7 @@ public class ProductExcelMapper {
 					if(!StringUtils.isEmpty(shipperBillsBy)){
 					productExcelObj.setShipperBillsBy(cell.getStringCellValue());
 					}else{
-						productExcelObj.setShipperBillsBy("");
+						productExcelObj.setShipperBillsBy(ApplicationConstants.CONST_STRING_EMPTY);
 					}
 					break;
 					
@@ -414,7 +518,7 @@ public class ProductExcelMapper {
 					productExcelObj.setAdditionalShippingInfo(additionalShippingInfo);
 					//System.out.println(columnIndex + "ship info "+ additionalShippingInfo);
 					}else{
-						productExcelObj.setAdditionalShippingInfo("");	
+						productExcelObj.setAdditionalShippingInfo(ApplicationConstants.CONST_STRING_EMPTY);	
 					}
 					//System.out.println("case 49");
 					break;
@@ -422,13 +526,12 @@ public class ProductExcelMapper {
 				case 50:
 					String canShipInPlainBox = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(canShipInPlainBox)){
-						if (canShipInPlainBox.trim().equalsIgnoreCase("Y")) {
-							productExcelObj.setCanShipInPlainBox(true);
-						} else {
-							productExcelObj.setCanShipInPlainBox(false);
-						}
-						}else { 
-							productExcelObj.setCanShipInPlainBox(false);
+					if (canShipInPlainBox.trim().equalsIgnoreCase(ApplicationConstants.CONST_CHAR_Y)) {
+						productExcelObj.setCanShipInPlainBox(true);
+					} else {
+						productExcelObj.setCanShipInPlainBox(false);
+					}
+					}else{ productExcelObj.setCanShipInPlainBox(false);
 					}
 					// //System.out.println("ship plain box"
 					// +cell.getStringCellValue());
@@ -437,7 +540,7 @@ public class ProductExcelMapper {
 				case 51:
 					String complianceCert = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(complianceCert)){
-					String complianceCertArr[] = complianceCert.split(",");
+					String complianceCertArr[] = complianceCert.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 					for (String string : complianceCertArr) {
 						complianceCerts.add(string);
 					} 
@@ -451,7 +554,7 @@ public class ProductExcelMapper {
 					if(!StringUtils.isEmpty(productDataSheet)){
 					productExcelObj.setProductDataSheet(productDataSheet);
 					}else{
-						productExcelObj.setProductDataSheet("");
+						productExcelObj.setProductDataSheet(ApplicationConstants.CONST_STRING_EMPTY);
 					}
 					// //System.out.println("product data sheet is "
 					// +productDataSheet);
@@ -460,7 +563,7 @@ public class ProductExcelMapper {
 				case 53:
 					String safetyWarning = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(safetyWarning)){
-					String safetyWarningsArr[] = safetyWarning.split(",");
+					String safetyWarningsArr[] = safetyWarning.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 					for (String string : safetyWarningsArr) {
 						safetyWarnings.add(string);
 					} 
@@ -473,7 +576,7 @@ public class ProductExcelMapper {
 					if(!StringUtils.isEmpty(additionalProductInfo)){
 					productExcelObj.setAdditionalProductInfo(additionalProductInfo);
 					}else{
-						productExcelObj.setAdditionalProductInfo("");
+						productExcelObj.setAdditionalProductInfo(ApplicationConstants.CONST_STRING_EMPTY);
 					}
 					break;
 
@@ -483,7 +586,7 @@ public class ProductExcelMapper {
 					productExcelObj.setDistributorOnlyComments(distributorOnlyComments);
 					}
 					else{
-						productExcelObj.setDistributorOnlyComments("");
+						productExcelObj.setDistributorOnlyComments(ApplicationConstants.CONST_STRING_EMPTY);
 					}
 					break;
 
@@ -493,7 +596,7 @@ public class ProductExcelMapper {
 					productExcelObj.setProductDisclaimer(productDisclaimer);
 					}
 					else{
-						productExcelObj.setProductDisclaimer("");
+						productExcelObj.setProductDisclaimer(ApplicationConstants.CONST_STRING_EMPTY);
 					} 
 					break;
 				case 57:
@@ -597,9 +700,13 @@ public class ProductExcelMapper {
 				case 95:
 					 priceType = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(priceType)){
-					productExcelObj.setPriceType(priceType);
+						if(priceType.equalsIgnoreCase("List")){
+					productExcelObj.setPriceType(ApplicationConstants.CONST_PRICE_TYPE_CODE_LIST);
+						}else if(priceType.equalsIgnoreCase("Net")){
+							productExcelObj.setPriceType(ApplicationConstants.CONST_PRICE_TYPE_CODE_NET);
+						}
 					}else{
-						productExcelObj.setPriceType("");
+						productExcelObj.setPriceType(ApplicationConstants.CONST_STRING_EMPTY);
 					}
 					break;
 
@@ -718,11 +825,43 @@ public class ProductExcelMapper {
 					productExcelObj.setPriceConfirmedThru(priceConfirmedThru);
 					break;
 					
-			
-						
+				case 140:
+				   SKUCriteria1 = cell.getStringCellValue();
+					break;
+					
+				case 141:
+				   SKUCriteria2 = cell.getStringCellValue();
+					break;
+					
+				case 144:
+					skuvalue = cell.getStringCellValue();
+					break;
+					
+				case 145:
+					Inlink = cell.getStringCellValue();
+					break;
+					
+					
+				case 146:
+				    Instatus = cell.getStringCellValue();
+					break;
+					
+				
+				case 147:
+					//int InQuantity= cell.getStringCellValue();
+					int InQuantity = (int) cell.getNumericCellValue();
+					skuObj=skuparserobj.getProductRelationSkus(SKUCriteria1, SKUCriteria2, skuvalue, Inlink, Instatus,Integer.toString(InQuantity));
+					
+					
+					if(!StringUtils.isEmpty(skuObj.getSKU())){
+						productsku.add(skuObj);	
+					productExcelObj.setProductRelationSkus(productsku);
+					}
+					
+					break;	
 				case 148:
 					String distributorViewOnly = cell.getStringCellValue();
-					if(!StringUtils.isEmpty(distributorViewOnly) && distributorViewOnly.trim().equalsIgnoreCase("Y")) {
+					if(!StringUtils.isEmpty(distributorViewOnly) && distributorViewOnly.trim().equalsIgnoreCase(ApplicationConstants.CONST_CHAR_Y)) {
 						productExcelObj.setSeoFlag(true);
 						
 					} else {
@@ -732,7 +871,7 @@ public class ProductExcelMapper {
 					
 				case 149:
 					String seoFlag = cell.getStringCellValue();
-					if(!StringUtils.isEmpty(seoFlag) && seoFlag.trim().equalsIgnoreCase("Y")) {
+					if(!StringUtils.isEmpty(seoFlag) && seoFlag.trim().equalsIgnoreCase(ApplicationConstants.CONST_CHAR_Y)) {
 						productExcelObj.setSeoFlag(true);
 					} else {
 						productExcelObj.setSeoFlag(false);
@@ -741,7 +880,12 @@ public class ProductExcelMapper {
 				}
 				
 				productExcelObj.setProductConfigurations(productConfigObj);
-			} 
+			} }catch(Exception e){
+			//e.printStackTrace();
+			_LOGGER.error("Error while Processing Product :"+productExcelObj.getExternalProductId() );
+			
+			 
+		}
 			productList.add(productExcelObj);
 			if((!listOfPrices.toString().isEmpty() && priceQurFlag == null) || (listOfPrices.toString().isEmpty() && priceQurFlag != null)){
 				priceGrids = priceGridParser.getPriceGrids(listOfPrices.toString(), listOfQuantity.toString(), listOfDiscount.toString(), currencyType,
@@ -759,7 +903,6 @@ public class ProductExcelMapper {
 				UpCharPrices = new StringBuilder();
 				UpCharDiscount = new StringBuilder();
 				UpCharQuantity = new StringBuilder();
-		}
 		workbook.close();
 		inputStream.close();
 		
@@ -783,15 +926,24 @@ public class ProductExcelMapper {
 		{ ex.printStackTrace();
 		}
 		}catch(Exception e){
-			e.printStackTrace();
-			// log error over here
+			//e.printStackTrace();
+			_LOGGER.error("Error while Processing excel sheet :"+path.substring(path.lastIndexOf("\\")) +e.getMessage());
 			
 			return null;
 		}finally{
-			workbook.close();
+			try {
+				workbook.close();
 			inputStream.close();
-				
+			} catch (IOException e) {
+				// TODO Auto-generated catch block
+				//e.printStackTrace();
+				_LOGGER.error("Error while Processing excel sheet :"+path.substring(path.lastIndexOf("\\"))+e.getMessage());
+			}
+			
+			
 		}
+		_LOGGER.info("Complted processing of excel sheet :"+path.substring(path.lastIndexOf("\\") ));
+		_LOGGER.info("Total no of product:"+productList.size() );
 		return productList;
 	}
 }
