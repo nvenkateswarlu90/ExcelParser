@@ -32,7 +32,6 @@ import com.a4.product.beans.Shape;
 import com.a4.product.beans.ShippingEstimate;
 import com.a4.product.beans.Size;
 import com.a4tech.product.lookupData.LookupData;
-//import com.a4tech.product.util.ApplicationConstants;
 import com.criteria.parser.PersonlizationParser;
 import com.criteria.parser.PriceGridParser;
 import com.criteria.parser.ProductArtworkProcessor;
@@ -57,15 +56,13 @@ import com.fasterxml.jackson.databind.ObjectMapper;
 
 public class ProductExcelMapper {
 	
-
-
 	private   Logger              _LOGGER              = Logger.getLogger(getClass());
 	
 	public static void main(String[] args)  {
 		try
 		{
 		ProductExcelMapper djvsd= new ProductExcelMapper();
-		List<Product> BeanObj = djvsd.readFileUsingPOI("E:\\productv2.xlsx");
+		List<Product> BeanObj = djvsd.readFileUsingPOI("D:\\Excel Reader\\productv2.xlsx");
 		if(BeanObj==null){
 			// log error or write business logic
 			System.out.println("there was an error while prcessing this file");
@@ -80,6 +77,7 @@ public class ProductExcelMapper {
 	
 	public  synchronized List<Product> readFileUsingPOI(String path)   {
 		List<Product>   productList = new ArrayList<Product>();
+		//_LOGGER.error("Error while Processing excel sheet :"+path.substring(path.lastIndexOf("\\")).replaceAll("\\","") );
 		_LOGGER.info("Reading Excel file from File Path"+path.substring(path.lastIndexOf("\\")) );
 		FileInputStream inputStream = null;
 		Workbook workbook = null;
@@ -167,7 +165,6 @@ public class ProductExcelMapper {
 			Inventory inventoryObj = new Inventory();
 	        Size sizeObj = new Size();
 			ShippingEstimate ShipingItem = new ShippingEstimate();
-			
 			List<ProductSkus> productsku=new ArrayList<ProductSkus>();
 			ProductSkus skuObj= new ProductSkus();
 			ProductSkuParser skuparserobj=new ProductSkuParser();
@@ -482,6 +479,7 @@ public class ProductExcelMapper {
 					
 				case 46:
 					shippingdimensionValue = cell.getStringCellValue();
+
 					//System.out.println("case 46");
 					break;
 					
@@ -497,7 +495,7 @@ public class ProductExcelMapper {
 					
 				case 48:
 					String shipperBillsBy = cell.getStringCellValue();
-					if(!StringUtils.isEmpty(shipperBillsBy)){
+					if(!StringUtils.isEmpty(shipperBillsBy.trim())){
 					productExcelObj.setShipperBillsBy(cell.getStringCellValue());
 					}else{
 						productExcelObj.setShipperBillsBy(ApplicationConstants.CONST_STRING_EMPTY);
@@ -557,7 +555,7 @@ public class ProductExcelMapper {
 					if(!StringUtils.isEmpty(safetyWarning)){
 					String safetyWarningsArr[] = safetyWarning.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 					for (String string : safetyWarningsArr) {
-						safetyWarnings.add(string);
+						safetyWarnings.add(string.trim());
 					} 
 					productExcelObj.setSafetyWarnings(safetyWarnings);
 					}
@@ -814,7 +812,14 @@ public class ProductExcelMapper {
 					break;// QUR Flag
 				case 134:
 					String priceConfirmedThru = cell.getStringCellValue();
-					productExcelObj.setPriceConfirmedThru(priceConfirmedThru);
+					//mmddyy   //yymmdd
+					 
+					String strArr[]=priceConfirmedThru.split("/");
+					priceConfirmedThru=strArr[2]+"/"+strArr[0]+"/"+strArr[1];
+					priceConfirmedThru=priceConfirmedThru.replaceAll("/", "-");
+					 
+					priceConfirmedThru=priceConfirmedThru+"T00:00:00";
+					 	productExcelObj.setPriceConfirmedThru(priceConfirmedThru);
 					break;
 					
 				case 140:
