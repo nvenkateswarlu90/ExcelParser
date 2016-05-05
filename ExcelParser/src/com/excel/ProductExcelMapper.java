@@ -3,12 +3,21 @@ package com.excel;
 import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
+import java.text.DateFormat;
+import java.text.SimpleDateFormat;
 import java.util.ArrayList;
+import java.util.Calendar;
+import java.util.Date;
+import java.util.GregorianCalendar;
 import java.util.HashMap;
 import java.util.HashSet;
 import java.util.Iterator;
 import java.util.List;
 import java.util.Map;
+
+import javax.xml.datatype.DatatypeConstants;
+import javax.xml.datatype.DatatypeFactory;
+import javax.xml.datatype.XMLGregorianCalendar;
 
 import org.apache.log4j.Logger;
 import org.apache.poi.EncryptedDocumentException;
@@ -65,7 +74,7 @@ public class ProductExcelMapper {
 		try
 		{
 		ProductExcelMapper djvsd= new ProductExcelMapper();
-		List<Product> BeanObj = djvsd.readFileUsingPOI("D:\\A4 ESPUpdate\\Excel File\\v2\\productv2.xlsx");
+		List<Product> BeanObj = djvsd.readFileUsingPOI("D:\\Excel Reader\\productv2.xlsx");
 		if(BeanObj==null){
 			// log error or write business logic
 			System.out.println("there was an error while prcessing this file");
@@ -480,13 +489,16 @@ public class ProductExcelMapper {
 					ShipingItem = shipinestmt.getShippingEstimates(
 							shippingitemValue, shippingdimensionValue,
 							shippingWeightValue);
+					if(ShipingItem!=null){
 					productConfigObj.setShippingEstimates(ShipingItem);
+					}
 					//System.out.println("case 47");
+					
 					break;
 					
 				case 48:
 					String shipperBillsBy = cell.getStringCellValue();
-					if(!StringUtils.isEmpty(shipperBillsBy)){
+					if(!StringUtils.isEmpty(shipperBillsBy.trim())){
 					productExcelObj.setShipperBillsBy(cell.getStringCellValue());
 					// //System.out.println("summary of product is "
 					// +shipperBillsBy);
@@ -548,7 +560,7 @@ public class ProductExcelMapper {
 					if(!StringUtils.isEmpty(safetyWarning)){
 					String safetyWarningsArr[] = safetyWarning.split(ApplicationConstants.CONST_STRING_COMMA_SEP);
 					for (String string : safetyWarningsArr) {
-						safetyWarnings.add(string);
+						safetyWarnings.add(string.trim());
 					} 
 					productExcelObj.setSafetyWarnings(safetyWarnings);
 					}
@@ -625,7 +637,14 @@ public class ProductExcelMapper {
 					
 				case 134:
 					String priceConfirmedThru = cell.getStringCellValue();
-					productExcelObj.setPriceConfirmedThru(priceConfirmedThru);
+					//mmddyy   //yymmdd
+					 
+					String strArr[]=priceConfirmedThru.split("/");
+					priceConfirmedThru=strArr[2]+"/"+strArr[0]+"/"+strArr[1];
+					priceConfirmedThru=priceConfirmedThru.replaceAll("/", "-");
+					 
+					priceConfirmedThru=priceConfirmedThru+"T00:00:00";
+					 	productExcelObj.setPriceConfirmedThru(priceConfirmedThru);
 					//System.out.println(columnIndex + "priceConfirmedThru "+ priceConfirmedThru);
 					break;
 					
