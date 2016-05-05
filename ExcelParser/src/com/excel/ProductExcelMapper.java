@@ -665,7 +665,7 @@ public class ProductExcelMapper {
 					break;	
 				case 148:
 					String distributorViewOnly = cell.getStringCellValue();
-					if(!StringUtils.isEmpty(distributorViewOnly) && distributorViewOnly.trim().equalsIgnoreCase("Y")) {
+					if(!StringUtils.isEmpty(distributorViewOnly) && distributorViewOnly.trim().equalsIgnoreCase(ApplicationConstants.CONST_CHAR_Y)) {
 						productExcelObj.setSeoFlag(true);
 						
 					} else {
