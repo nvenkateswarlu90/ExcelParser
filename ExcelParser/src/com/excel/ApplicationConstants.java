@@ -1,7 +1,13 @@
 package com.excel;
 
 public class ApplicationConstants {
-
+   
+public static final String PRICE_SPLITTER_BASE_PRICEGRID              = "___";
+	
+	
+	
+	public static final String CONST_STRING_VALUE_ONE                     = "1";
+	public static final String CONST_STRING_CAPITAL_Y                     = "Y";
 	public final static String CONST_STRING_EMPTY  = "";
 	public static final String CONST_STRING_COMMA_SEP = ",";
     public static final String  CONST_PRICE_TYPE_CODE_LIST    = "L";
