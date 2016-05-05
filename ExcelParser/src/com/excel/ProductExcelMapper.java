@@ -18,6 +18,7 @@ import org.springframework.util.StringUtils;
 import com.a4.product.beans.Artwork;
 import com.a4.product.beans.Color;
 import com.a4.product.beans.ImprintMethod;
+import com.a4.product.beans.ImprintSizeLocation;
 import com.a4.product.beans.Inventory;
 import com.a4.product.beans.Personalization;
 import com.a4.product.beans.PriceGrid;
@@ -37,6 +38,7 @@ import com.criteria.parser.PriceGridParser;
 import com.criteria.parser.ProductArtworkProcessor;
 import com.criteria.parser.ProductColorParser;
 import com.criteria.parser.ProductImprintMethodParser;
+import com.criteria.parser.ProductImprintSizeLocParser;
 import com.criteria.parser.ProductOriginParser;
 import com.criteria.parser.ProductPackagingParser;
 import com.criteria.parser.ProductRushTimeParser;
@@ -97,6 +99,7 @@ public class ProductExcelMapper {
 		  String upChargeDetails = null;
 		  String upChargeLevel = null;
 		  List<PriceGrid> priceGrids = new ArrayList<PriceGrid>();
+		  String imprintSize=null;
 		try{
 			  inputStream = new FileInputStream(new File(path));
 			_LOGGER.info("Completed Reading Excel file from File Path");
@@ -145,6 +148,8 @@ public class ProductExcelMapper {
 			List<Artwork> artworkList = new ArrayList<Artwork>();
 			List<Shape> shapeList=new ArrayList<Shape>();
 			List<ProductionTime> productionTimeList = new ArrayList<ProductionTime>();
+			List<ImprintSizeLocation> impsizelocList = new ArrayList<ImprintSizeLocation>();
+			
 			
 			ProductColorParser colorparser=new ProductColorParser();
 			ProductOriginParser originParser=new ProductOriginParser();
@@ -168,6 +173,7 @@ public class ProductExcelMapper {
 			List<ProductSkus> productsku=new ArrayList<ProductSkus>();
 			ProductSkus skuObj= new ProductSkus();
 			ProductSkuParser skuparserobj=new ProductSkuParser();
+			ProductImprintSizeLocParser sizeLocParser =new ProductImprintSizeLocParser();
 			
 		
 			
@@ -409,6 +415,26 @@ public class ProductExcelMapper {
 					}
 					break;
 					
+				case 34:
+					  imprintSize = cell.getStringCellValue();
+					  
+					break;
+					
+				case 35:
+					
+					// to process this there is some problem with ASI Product on ui for this criteria not able to work on this now
+					boolean flagim=false;
+					/*String imprintLocation = cell.getStringCellValue();
+					if(!StringUtils.isEmpty(imprintLocation)){
+						flagim=true;
+					}
+					impsizelocList=sizeLocParser.getimpsizeLocCriteria(imprintSize,imprintLocation,flagim);
+					if(impsizelocList!=null){
+					productConfigObj.setImprintSizeLocations(impsizelocList);
+					}*/
+					
+					break;
+				
 					
 				case 38:
 					prodSample = cell.getStringCellValue();
