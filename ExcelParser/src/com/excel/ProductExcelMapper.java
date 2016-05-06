@@ -19,6 +19,7 @@ import com.a4.product.beans.Artwork;
 import com.a4.product.beans.Color;
 import com.a4.product.beans.ImprintMethod;
 import com.a4.product.beans.Inventory;
+import com.a4.product.beans.Option;
 import com.a4.product.beans.Personalization;
 import com.a4.product.beans.PriceGrid;
 import com.a4.product.beans.Product;
@@ -38,6 +39,7 @@ import com.criteria.parser.PriceGridParser;
 import com.criteria.parser.ProductArtworkProcessor;
 import com.criteria.parser.ProductColorParser;
 import com.criteria.parser.ProductImprintMethodParser;
+import com.criteria.parser.ProductOptionParser;
 import com.criteria.parser.ProductNumberParser;
 import com.criteria.parser.ProductOriginParser;
 import com.criteria.parser.ProductPackagingParser;
@@ -136,6 +138,16 @@ public class ProductExcelMapper {
 		String productNumber=null;
 		ProductNumber		pnumObj=new ProductNumber();
 		List<ProductNumber> pnumberList=new ArrayList<ProductNumber>();
+		
+		List<Option> option=new ArrayList<Option>();
+		Option optionobj= new Option();
+		ProductOptionParser optionparserobj=new ProductOptionParser();
+		String optiontype =null;
+		String optionname =null;
+		String optionvalues =null;
+		String optionadditionalinfo =null;
+		Boolean canorder =null;
+		Boolean Reqfororder =null;
 		while (iterator.hasNext()) {
 			
 			try{
@@ -360,6 +372,38 @@ public class ProductExcelMapper {
 					}
 					break;
 					
+				case 22:
+					 optiontype=cell.getStringCellValue();
+				   break;
+					
+				case 23:
+					 optionname=cell.getStringCellValue();
+
+					
+				   break;
+				   
+				case 24:
+					 optionvalues=cell.getStringCellValue();					
+					break;
+					
+				case 25:
+					 canorder=cell.getBooleanCellValue();
+					
+					
+					break;
+					
+				case 26:
+					 Reqfororder=cell.getBooleanCellValue();
+					
+					break;
+					
+				case 27:
+					optionadditionalinfo=cell.getStringCellValue();	
+					optionobj=optionparserobj.getOptions(optiontype, optionname, optionvalues, canorder, Reqfororder, optionadditionalinfo);
+					option.add(optionobj);		
+					productConfigObj.setOptions(option);	
+					break;
+
 				case 28:
 					String imprintValue=cell.getStringCellValue();
 					if(!StringUtils.isEmpty(imprintValue)){
