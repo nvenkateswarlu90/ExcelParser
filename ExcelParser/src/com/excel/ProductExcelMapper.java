@@ -18,7 +18,6 @@ import org.springframework.util.StringUtils;
 import com.a4.product.beans.Artwork;
 import com.a4.product.beans.Color;
 import com.a4.product.beans.ImprintMethod;
-import com.a4.product.beans.ImprintSizeLocation;
 import com.a4.product.beans.Inventory;
 import com.a4.product.beans.Personalization;
 import com.a4.product.beans.PriceGrid;
@@ -38,7 +37,6 @@ import com.criteria.parser.PriceGridParser;
 import com.criteria.parser.ProductArtworkProcessor;
 import com.criteria.parser.ProductColorParser;
 import com.criteria.parser.ProductImprintMethodParser;
-import com.criteria.parser.ProductImprintSizeLocParser;
 import com.criteria.parser.ProductOriginParser;
 import com.criteria.parser.ProductPackagingParser;
 import com.criteria.parser.ProductRushTimeParser;
@@ -86,6 +84,7 @@ public class ProductExcelMapper {
 		List<String>  productXids = new ArrayList<String>();
 		  Product productExcelObj = new Product();   
 		  ProductConfigurations productConfigObj=new ProductConfigurations();
+		  ProductSkuParser skuparserobj=new ProductSkuParser();
 		  String externalProductId = null;
 		  String currencyType = null;
 		  String priceQurFlag = null;
@@ -99,7 +98,6 @@ public class ProductExcelMapper {
 		  String upChargeDetails = null;
 		  String upChargeLevel = null;
 		  List<PriceGrid> priceGrids = new ArrayList<PriceGrid>();
-		  String imprintSize=null;
 		try{
 			  inputStream = new FileInputStream(new File(path));
 			_LOGGER.info("Completed Reading Excel file from File Path");
@@ -120,7 +118,17 @@ public class ProductExcelMapper {
 		StringBuilder UpCharPrices = new StringBuilder();
 		StringBuilder UpCharDiscount = new StringBuilder();
 		StringBuilder UpCharCriteria = new StringBuilder();
+		String quantity = null;
 		//StringBuilder UpCharCriteria2 = new StringBuilder();
+		String SKUCriteria1 =null;
+		String SKUCriteria2 =null;
+		String skuvalue  =null;
+		String Inlink  =null;
+		String Instatus  =null;
+		String InQuantity=null;
+		ProductSkus skuObj= new ProductSkus();
+		List<ProductSkus> productsku=new ArrayList<ProductSkus>();
+		
 		while (iterator.hasNext()) {
 			
 			try{
@@ -148,8 +156,6 @@ public class ProductExcelMapper {
 			List<Artwork> artworkList = new ArrayList<Artwork>();
 			List<Shape> shapeList=new ArrayList<Shape>();
 			List<ProductionTime> productionTimeList = new ArrayList<ProductionTime>();
-			List<ImprintSizeLocation> impsizelocList = new ArrayList<ImprintSizeLocation>();
-			
 			
 			ProductColorParser colorparser=new ProductColorParser();
 			ProductOriginParser originParser=new ProductOriginParser();
@@ -170,10 +176,9 @@ public class ProductExcelMapper {
 			Inventory inventoryObj = new Inventory();
 	        Size sizeObj = new Size();
 			ShippingEstimate ShipingItem = new ShippingEstimate();
-			List<ProductSkus> productsku=new ArrayList<ProductSkus>();
-			ProductSkus skuObj= new ProductSkus();
-			ProductSkuParser skuparserobj=new ProductSkuParser();
-			ProductImprintSizeLocParser sizeLocParser =new ProductImprintSizeLocParser();
+			
+			
+			
 			
 		
 			
@@ -182,12 +187,7 @@ public class ProductExcelMapper {
 			String sizeGroup=null;
 			String rushService=null;
 			String prodSample=null;
-			String SKUCriteria1 =null;
-			String SKUCriteria2 =null;
-			String skuvalue  =null;
-			String Inlink  =null;
-			String Instatus  =null;
-			String quantity = null;
+			
 			 productXids.add(externalProductId);
 			 
 			
@@ -415,26 +415,6 @@ public class ProductExcelMapper {
 					}
 					break;
 					
-				case 34:
-					  imprintSize = cell.getStringCellValue();
-					  
-					break;
-					
-				case 35:
-					
-					// to process this there is some problem with ASI Product on ui for this criteria not able to work on this now
-					boolean flagim=false;
-					/*String imprintLocation = cell.getStringCellValue();
-					if(!StringUtils.isEmpty(imprintLocation)){
-						flagim=true;
-					}
-					impsizelocList=sizeLocParser.getimpsizeLocCriteria(imprintSize,imprintLocation,flagim);
-					if(impsizelocList!=null){
-					productConfigObj.setImprintSizeLocations(impsizelocList);
-					}*/
-					
-					break;
-				
 					
 				case 38:
 					prodSample = cell.getStringCellValue();
@@ -872,14 +852,7 @@ public class ProductExcelMapper {
 				
 				case 147:
 					//int InQuantity= cell.getStringCellValue();
-					int InQuantity = (int) cell.getNumericCellValue();
-					skuObj=skuparserobj.getProductRelationSkus(SKUCriteria1, SKUCriteria2, skuvalue, Inlink, Instatus,Integer.toString(InQuantity));
-					
-					
-					if(!StringUtils.isEmpty(skuObj.getSKU())){
-						productsku.add(skuObj);	
-					productExcelObj.setProductRelationSkus(productsku);
-					}
+					 InQuantity =  cell.getStringCellValue();
 					
 					break;	
 				case 148:
@@ -921,6 +894,13 @@ public class ProductExcelMapper {
 					priceGrids = priceGridParser.getUpchargePriceGrid(UpCharQuantity.toString(), UpCharPrices.toString(), UpCharDiscount.toString(), UpCharCriteria.toString(), 
 							 upChargeQur, currencyType, upChargeName, upchargeType, upChargeLevel, new Integer(1), priceGrids);
 				}
+				
+				if(!StringUtils.isEmpty(skuvalue)){
+					skuObj=skuparserobj.getProductRelationSkus(SKUCriteria1, SKUCriteria2, skuvalue, Inlink, Instatus,InQuantity);
+					productsku.add(skuObj);	
+				//productExcelObj.setProductRelationSkus(productsku);
+				}
+				
 				upChargeQur = null;
 				UpCharCriteria = new StringBuilder();
 				priceQurFlag = null;
@@ -928,11 +908,18 @@ public class ProductExcelMapper {
 				UpCharPrices = new StringBuilder();
 				UpCharDiscount = new StringBuilder();
 				UpCharQuantity = new StringBuilder();
+				skuvalue = null;
+				Inlink = null;
+				Instatus = null;
+				InQuantity = null;
+				SKUCriteria1 = null;
+				SKUCriteria2 = null;
 		}
 		workbook.close();
 		inputStream.close();
 		
 		productExcelObj.setPriceGrids(priceGrids);
+		productExcelObj.setProductRelationSkus(productsku);
 		productList.add(productExcelObj);
 		ObjectMapper mapper = new ObjectMapper();
 		try {
