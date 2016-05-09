@@ -21,6 +21,7 @@ import com.a4.product.beans.Color;
 import com.a4.product.beans.ImprintMethod;
 import com.a4.product.beans.Inventory;
 import com.a4.product.beans.Material;
+import com.a4.product.beans.Option;
 import com.a4.product.beans.Personalization;
 import com.a4.product.beans.PriceGrid;
 import com.a4.product.beans.Product;
@@ -42,6 +43,7 @@ import com.criteria.parser.ProductColorParser;
 import com.criteria.parser.ProductImprintMethodParser;
 import com.criteria.parser.ProductMaterialParser;
 import com.criteria.parser.ProductNumberParser;
+import com.criteria.parser.ProductOptionParser;
 import com.criteria.parser.ProductOriginParser;
 import com.criteria.parser.ProductPackagingParser;
 import com.criteria.parser.ProductRushTimeParser;
@@ -65,7 +67,7 @@ public class ProductExcelMapper {
 		try
 		{
 		ProductExcelMapper djvsd= new ProductExcelMapper();
-		List<Product> BeanObj = djvsd.readFileUsingPOI("D:\\A4 ESPUpdate\\Excel File\\productv2.xlsx");
+		List<Product> BeanObj = djvsd.readFileUsingPOI("D:\\Excel Reader\\65529.xlsx");
 		if(BeanObj==null){
 			// log error or write business logic
 			System.out.println("there was an error while prcessing this file");
@@ -138,6 +140,16 @@ public class ProductExcelMapper {
 		String productNumber=null;
 		ProductNumber		pnumObj=new ProductNumber();
 		List<ProductNumber> pnumberList=new ArrayList<ProductNumber>();
+		
+		List<Option> option=new ArrayList<Option>();
+		Option optionobj= new Option();
+		ProductOptionParser optionparserobj=new ProductOptionParser();
+		String optiontype =null;
+		String optionname =null;
+		String optionvalues =null;
+		String optionadditionalinfo =null;
+		String canorder =null;
+		String reqfororder =null;
 		while (iterator.hasNext()) {
 			
 			try{
@@ -221,6 +233,7 @@ public class ProductExcelMapper {
 							 ObjectMapper mapper = new ObjectMapper();
 							   // Add repeatable sets here
 							 	productExcelObj.setPriceGrids(priceGrids);
+							 	//productConfigObj.setOptions(option);
 							 	productExcelObj.setProductConfigurations(productConfigObj);
 							 	productExcelObj.setProductRelationSkus(productsku);
 							 	productExcelObj.setProductNumbers(pnumberList);
@@ -232,6 +245,7 @@ public class ProductExcelMapper {
 								productConfigObj = new ProductConfigurations();
 								productsku = new ArrayList<ProductSkus>();
 								pnumberList = new ArrayList<ProductNumber>();
+								option=new ArrayList<Option>();
 								
 						 }
 						    if(!productXids.contains(xid)){
@@ -430,6 +444,36 @@ public class ProductExcelMapper {
 					productConfigObj.setOrigins(origin);
 					}
 					}
+					break;
+					
+				case 22:
+					 optiontype=cell.getStringCellValue();
+				   break;
+					
+				case 23:
+					 optionname=cell.getStringCellValue();
+
+					
+				   break;
+				   
+				case 24:
+					 optionvalues=cell.getStringCellValue();					
+					break;
+					
+				case 25:
+					 canorder=cell.getStringCellValue();	
+					
+					
+					break;
+					
+				case 26:
+					 reqfororder=cell.getStringCellValue();	
+					
+					break;
+					
+				case 27:
+					optionadditionalinfo=cell.getStringCellValue();	
+					
 					break;
 					
 				case 28:
@@ -966,7 +1010,15 @@ public class ProductExcelMapper {
 				
 				if(!StringUtils.isEmpty(productNumber)){
 					pnumObj=pnumberParser.getProductNumer(productNumberCriteria1, productNumberCriteria2, productNumber);
+					if(pnumObj!=null){
 					pnumberList.add(pnumObj);
+					}
+				}
+				
+				if(!StringUtils.isEmpty(optionname) && !StringUtils.isEmpty(optiontype) && !StringUtils.isEmpty(optionvalues) ){
+					optionobj=optionparserobj.getOptions(optiontype, optionname, optionvalues, canorder, reqfororder, optionadditionalinfo);
+					option.add(optionobj);		
+					productConfigObj.setOptions(option);	
 				}
 				
 				upChargeQur = null;
@@ -985,6 +1037,12 @@ public class ProductExcelMapper {
 			    productNumberCriteria1=null; 
 			    productNumberCriteria2=null;
 			    productNumber=null;
+			    optiontype=null;
+			    optionname=null;
+			    optionvalues=null;
+			    canorder=null;
+			    reqfororder=null;
+			    optionadditionalinfo=null;
 			
 			}catch(Exception e){
 			//e.printStackTrace();
