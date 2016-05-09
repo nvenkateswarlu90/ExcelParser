@@ -19,6 +19,7 @@ import com.a4.product.beans.Artwork;
 import com.a4.product.beans.Color;
 import com.a4.product.beans.ImprintMethod;
 import com.a4.product.beans.Inventory;
+import com.a4.product.beans.Material;
 import com.a4.product.beans.Personalization;
 import com.a4.product.beans.PriceGrid;
 import com.a4.product.beans.Product;
@@ -38,6 +39,7 @@ import com.criteria.parser.PriceGridParser;
 import com.criteria.parser.ProductArtworkProcessor;
 import com.criteria.parser.ProductColorParser;
 import com.criteria.parser.ProductImprintMethodParser;
+import com.criteria.parser.ProductMaterialParser;
 import com.criteria.parser.ProductNumberParser;
 import com.criteria.parser.ProductOriginParser;
 import com.criteria.parser.ProductPackagingParser;
@@ -163,6 +165,7 @@ public class ProductExcelMapper {
 			List<Artwork> artworkList = new ArrayList<Artwork>();
 			List<Shape> shapeList=new ArrayList<Shape>();
 			List<ProductionTime> productionTimeList = new ArrayList<ProductionTime>();
+			List<Material> materialList=new ArrayList<Material>();
 			
 			ProductColorParser colorparser=new ProductColorParser();
 			ProductOriginParser originParser=new ProductOriginParser();
@@ -179,6 +182,7 @@ public class ProductExcelMapper {
 			ProductShapeParser shapeParser=new ProductShapeParser();
 			ProductionTimeParser productionTimeParser =new ProductionTimeParser();
 			ProductThemeParser themeParser=new ProductThemeParser();
+			ProductMaterialParser materialParser=new ProductMaterialParser();
 			
 			Inventory inventoryObj = new Inventory();
 	        Size sizeObj = null;
@@ -305,6 +309,14 @@ public class ProductExcelMapper {
 					}
 					break;
 					
+				case 15:
+					String materialValue=cell.getStringCellValue();
+					if(!StringUtils.isEmpty(materialValue)){
+					materialList= materialParser.getMaterialCriteria(materialValue);
+					if(materialList!=null){
+					productConfigObj.setMaterials(materialList);
+					}
+					}
 					
 				case 16:
 					 sizeGroup = cell.getStringCellValue();	
