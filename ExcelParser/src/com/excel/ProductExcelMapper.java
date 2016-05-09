@@ -66,7 +66,7 @@ public class ProductExcelMapper {
 		try
 		{
 		ProductExcelMapper djvsd= new ProductExcelMapper();
-		List<Product> BeanObj = djvsd.readFileUsingPOI("D:\\A4 ESPUpdate\\Excel File\\productv2.xlsx");
+		List<Product> BeanObj = djvsd.readFileUsingPOI("D:\\Excel Reader\\productv2.xlsx");
 		if(BeanObj==null){
 			// log error or write business logic
 			System.out.println("there was an error while prcessing this file");
@@ -146,8 +146,8 @@ public class ProductExcelMapper {
 		String optionname =null;
 		String optionvalues =null;
 		String optionadditionalinfo =null;
-		Boolean canorder =null;
-		Boolean Reqfororder =null;
+		String canorder =null;
+		String reqfororder =null;
 		while (iterator.hasNext()) {
 			
 			try{
@@ -387,21 +387,19 @@ public class ProductExcelMapper {
 					break;
 					
 				case 25:
-					 canorder=cell.getBooleanCellValue();
+					 canorder=cell.getStringCellValue();	
 					
 					
 					break;
 					
 				case 26:
-					 Reqfororder=cell.getBooleanCellValue();
+					 reqfororder=cell.getStringCellValue();	
 					
 					break;
 					
 				case 27:
 					optionadditionalinfo=cell.getStringCellValue();	
-					optionobj=optionparserobj.getOptions(optiontype, optionname, optionvalues, canorder, Reqfororder, optionadditionalinfo);
-					option.add(optionobj);		
-					productConfigObj.setOptions(option);	
+					
 					break;
 
 				case 28:
@@ -926,10 +924,19 @@ public class ProductExcelMapper {
 					productsku.add(skuObj);
 				}
 				
+				if(!StringUtils.isEmpty(optionname) && !StringUtils.isEmpty(optiontype) && !StringUtils.isEmpty(optionvalues) ){
+					optionobj=optionparserobj.getOptions(optiontype, optionname, optionvalues, canorder, reqfororder, optionadditionalinfo);
+					option.add(optionobj);		
+					productConfigObj.setOptions(option);	
+				}
+
 				if(!StringUtils.isEmpty(productNumber)){
 					pnumObj=pnumberParser.getProductNumer(productNumberCriteria1, productNumberCriteria2, productNumber);
 					pnumberList.add(pnumObj);
 				}
+				
+				
+				
 				
 				upChargeQur = null;
 				UpCharCriteria = new StringBuilder();
@@ -958,7 +965,7 @@ public class ProductExcelMapper {
 		productList.add(productExcelObj);
 		ObjectMapper mapper = new ObjectMapper();
 		try {
-			File json = new File("D:\\A4 ESPUpdate\\Excel File\\file.json");
+			File json = new File("D:\\Excel Reader\\file.json");
 		mapper.writeValue(json, productExcelObj);
 		System.out.println("/////////////////////////////////////////");
 		System.out.println("Java object converted to JSON String, written to file");
