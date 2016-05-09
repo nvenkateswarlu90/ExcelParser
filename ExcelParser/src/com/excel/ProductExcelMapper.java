@@ -19,12 +19,12 @@ import org.springframework.util.StringUtils;
 import com.a4.product.beans.Artwork;
 import com.a4.product.beans.Color;
 import com.a4.product.beans.ImprintMethod;
-import com.a4.product.beans.ImprintSizeLocation;
 import com.a4.product.beans.Inventory;
 import com.a4.product.beans.Personalization;
 import com.a4.product.beans.PriceGrid;
 import com.a4.product.beans.Product;
 import com.a4.product.beans.ProductConfigurations;
+import com.a4.product.beans.ProductNumber;
 import com.a4.product.beans.ProductSkus;
 import com.a4.product.beans.ProductionTime;
 import com.a4.product.beans.RushTime;
@@ -39,7 +39,7 @@ import com.criteria.parser.PriceGridParser;
 import com.criteria.parser.ProductArtworkProcessor;
 import com.criteria.parser.ProductColorParser;
 import com.criteria.parser.ProductImprintMethodParser;
-import com.criteria.parser.ProductImprintSizeLocParser;
+import com.criteria.parser.ProductNumberParser;
 import com.criteria.parser.ProductOriginParser;
 import com.criteria.parser.ProductPackagingParser;
 import com.criteria.parser.ProductRushTimeParser;
@@ -63,7 +63,7 @@ public class ProductExcelMapper {
 		try
 		{
 		ProductExcelMapper djvsd= new ProductExcelMapper();
-		List<Product> BeanObj = djvsd.readFileUsingPOI("E:\\productv2.xlsx");
+		List<Product> BeanObj = djvsd.readFileUsingPOI("D:\\A4 ESPUpdate\\Excel File\\productv2.xlsx");
 		if(BeanObj==null){
 			// log error or write business logic
 			System.out.println("there was an error while prcessing this file");
@@ -85,6 +85,7 @@ public class ProductExcelMapper {
 		List<String>  productXids = new ArrayList<String>();
 		  Product productExcelObj = new Product();   
 		  ProductConfigurations productConfigObj=new ProductConfigurations();
+		  ProductSkuParser skuparserobj=new ProductSkuParser();
 		  boolean isProduct = false;
 		  String externalProductId = null;
 		  String currencyType = null;
@@ -99,16 +100,16 @@ public class ProductExcelMapper {
 		  String upChargeDetails = null;
 		  String upChargeLevel = null;
 		  List<PriceGrid> priceGrids = new ArrayList<PriceGrid>();
-		  String imprintSize=null;
+		  
+		  
+		  ProductNumberParser pnumberParser=new ProductNumberParser();
 		try{
-			  inputStream = new FileInputStream(new File(path));
-			_LOGGER.info("Completed Reading Excel file from File Path");
-			_LOGGER.info("Creating & Initializing Workbook");
-			  workbook = WorkbookFactory.create(new File(path));//new XSSFWorkbook(inputStream);
-			_LOGGER.info("Workbook Object created");
-			  //Product productExcelObj = new Product();
-			  //ProductConfigurations productConfigObj=new ProductConfigurations();
-	    _LOGGER.info("Processing WorkSheet");
+	    inputStream = new FileInputStream(new File(path));
+	    _LOGGER.info("Completed Reading Excel file from File Path");
+		_LOGGER.info("Creating & Initializing Workbook");
+		workbook = WorkbookFactory.create(new File(path));//new XSSFWorkbook(inputStream);
+		_LOGGER.info("Workbook Object created");
+		_LOGGER.info("Processing WorkSheet");
 	    Sheet sheet = workbook.getSheetAt(0);
 		Iterator<Row> iterator = sheet.iterator();
 		_LOGGER.info("Started Processing Product");
@@ -120,7 +121,21 @@ public class ProductExcelMapper {
 		StringBuilder UpCharPrices = new StringBuilder();
 		StringBuilder UpCharDiscount = new StringBuilder();
 		StringBuilder UpCharCriteria = new StringBuilder();
-		//StringBuilder UpCharCriteria2 = new StringBuilder();
+		String quantity = null;
+		String SKUCriteria1 =null;
+		String SKUCriteria2 =null;
+		String skuvalue  =null;
+		String Inlink  =null;
+		String Instatus  =null;
+		String InQuantity=null;
+		ProductSkus skuObj= new ProductSkus();
+		List<ProductSkus> productsku=new ArrayList<ProductSkus>();
+		
+		String productNumberCriteria1=null;
+		String productNumberCriteria2=null;
+		String productNumber=null;
+		ProductNumber		pnumObj=new ProductNumber();
+		List<ProductNumber> pnumberList=new ArrayList<ProductNumber>();
 		while (iterator.hasNext()) {
 			
 			try{
@@ -148,8 +163,6 @@ public class ProductExcelMapper {
 			List<Artwork> artworkList = new ArrayList<Artwork>();
 			List<Shape> shapeList=new ArrayList<Shape>();
 			List<ProductionTime> productionTimeList = new ArrayList<ProductionTime>();
-			List<ImprintSizeLocation> impsizelocList = new ArrayList<ImprintSizeLocation>();
-			
 			
 			ProductColorParser colorparser=new ProductColorParser();
 			ProductOriginParser originParser=new ProductOriginParser();
@@ -166,28 +179,17 @@ public class ProductExcelMapper {
 			ProductShapeParser shapeParser=new ProductShapeParser();
 			ProductionTimeParser productionTimeParser =new ProductionTimeParser();
 			ProductThemeParser themeParser=new ProductThemeParser();
-			//ProductConfigurations productConfigObj=new ProductConfigurations();
-			Inventory inventoryObj = new Inventory();
-	        Size sizeObj = new Size();
-			ShippingEstimate ShipingItem = new ShippingEstimate();
-			List<ProductSkus> productsku=new ArrayList<ProductSkus>();
-			ProductSkus skuObj= new ProductSkus();
-			ProductSkuParser skuparserobj=new ProductSkuParser();
-			ProductImprintSizeLocParser sizeLocParser =new ProductImprintSizeLocParser();
 			
-		
+			Inventory inventoryObj = new Inventory();
+	        Size sizeObj = null;
+			ShippingEstimate ShipingItem = null;
 			
 			String shippingitemValue = null;
 			String shippingdimensionValue = null;
 			String sizeGroup=null;
 			String rushService=null;
 			String prodSample=null;
-			String SKUCriteria1 =null;
-			String SKUCriteria2 =null;
-			String skuvalue  =null;
-			String Inlink  =null;
-			String Instatus  =null;
-			String quantity = null;
+			
 			 productXids.add(externalProductId);
 			 boolean checkXid  = false;
 			 
@@ -216,12 +218,16 @@ public class ProductExcelMapper {
 							   // Add repeatable sets here
 							 	productExcelObj.setPriceGrids(priceGrids);
 							 	productExcelObj.setProductConfigurations(productConfigObj);
+							 	productExcelObj.setProductRelationSkus(productsku);
+							 	productExcelObj.setProductNumbers(pnumberList);
 							 	productList.add(productExcelObj);
 								System.out.println(mapper.writeValueAsString(productExcelObj));
 								
 								// reset for repeateable set 
 								priceGrids = new ArrayList<PriceGrid>();
 								productConfigObj = new ProductConfigurations();
+								productsku = new ArrayList<ProductSkus>();
+								pnumberList = new ArrayList<ProductNumber>();
 								
 						 }
 						    if(!productXids.contains(xid)){
@@ -238,12 +244,7 @@ public class ProductExcelMapper {
 				case 1:
 					 externalProductId = cell.getStringCellValue();
 					_LOGGER.info("Processing Product :"+ externalProductId);
-					/*if(externalProductId==null || externalProductId.isEmpty()){
-						rowFlag=true;
-						break;
-					}*/
 					productExcelObj.setExternalProductId(externalProductId);
-					// //System.out.println("external id is " +externalProductId);
 					break;
 					
 				case 2:
@@ -254,9 +255,8 @@ public class ProductExcelMapper {
 					}else{
 						productExcelObj.setName(ApplicationConstants.CONST_STRING_EMPTY);
 					}
-					// //System.out.println("product name is " +name);
-					//System.out.println("case 2");
 					break;
+		
 				case 3:
 					int asiProdNo = 0;
 					if(cell.getCellType() == Cell.CELL_TYPE_STRING){
@@ -271,16 +271,15 @@ public class ProductExcelMapper {
 						  productExcelObj.setAsiProdNo(Integer.toString(asiProdNo));
 					  }
 					break;
+			
 				case 4:
 					String productLevelSku = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(productLevelSku)){
 					productExcelObj.setProductLevelSku(productLevelSku);
-					// //System.out.println("sku is " +productLevelSku);
 					}else{
 						productExcelObj.setProductLevelSku(ApplicationConstants.CONST_STRING_EMPTY);
 					}
-					//System.out.println("case 4");
-					break;
+				    break;
 					
 				case 5:
 					String inventoryLink = cell.getStringCellValue();
@@ -288,7 +287,6 @@ public class ProductExcelMapper {
 					inventoryObj.setInventoryLink(inventoryLink);
 					productExcelObj.setInventory(inventoryObj);
 					}
-					// //System.out.println("Inventory link " +inventoryLink);
 					break;
 					
 				case 6:
@@ -297,7 +295,6 @@ public class ProductExcelMapper {
 					inventoryObj.setInventoryStatus(inventoryStatus);
 					productExcelObj.setInventory(inventoryObj);
 					}
-					// //System.out.println("Inventory status " +inventoryStatus);
 					break;
 					
 				case 7:
@@ -316,8 +313,6 @@ public class ProductExcelMapper {
 					inventoryObj.setInventoryQuantity(Integer.toString(inventoryQuantity));
 					productExcelObj.setInventory(inventoryObj);
 					}
-					// //System.out.println("Inventory quantity "
-					// +inventoryQuantity);
 					break;
 					
 				case 8:
@@ -327,8 +322,6 @@ public class ProductExcelMapper {
 					}else{
 						productExcelObj.setDescription(ApplicationConstants.CONST_STRING_EMPTY);
 					}
-					// //System.out.println("product description is "
-					// +description);
 					break;
 					
 				case 9:
@@ -338,7 +331,6 @@ public class ProductExcelMapper {
 					}else{
 						productExcelObj.setSummary(ApplicationConstants.CONST_STRING_EMPTY);
 					}
-					//System.out.println("summary of product is " +summary);
 					break;
 				
 				case 12:
@@ -364,7 +356,6 @@ public class ProductExcelMapper {
 					break;
 					
 				case 14:
-					
 					String colorValue=cell.getStringCellValue();
 					if(!StringUtils.isEmpty(colorValue)){
 					color=colorparser.getColorCriteria(colorValue);
@@ -383,9 +374,10 @@ public class ProductExcelMapper {
 					
 					String sizeValue = cell.getStringCellValue();
 					sizeObj=sizeParser.getSizes(sizeGroup,sizeValue);
+					if(sizeObj.getApparel()!=null || sizeObj.getCapacity()!=null || sizeObj.getDimension()!=null||sizeObj.getOther()!=null||sizeObj.getVolume()!=null){
 					productConfigObj.setSizes(sizeObj);
-					
-				break;
+					}
+					break;
 				
 				 case 18:
 					String shapeValue=cell.getStringCellValue();
@@ -407,7 +399,7 @@ public class ProductExcelMapper {
 					}
 					break;
 					
-					case 20:
+				case 20:
 					String tradeValue=cell.getStringCellValue();
 					if(!StringUtils.isEmpty(tradeValue)){
 					tradeName=tradeNameParser.getTradeNameCriteria(tradeValue);
@@ -426,8 +418,6 @@ public class ProductExcelMapper {
 					productConfigObj.setOrigins(origin);
 					}
 					}
-					//System.out.println("case 21");
-					
 					break;
 					
 				case 28:
@@ -438,7 +428,6 @@ public class ProductExcelMapper {
 					productConfigObj.setImprintMethods(imprintMethods);
 					}
 					}
-					//System.out.println(columnIndex + "imprintMethods " + imprintMethods);
 					break;
 					
 				case 29:
@@ -450,7 +439,6 @@ public class ProductExcelMapper {
 					}
 					productExcelObj.setLineNames(lineNames);
 					}
-					
 					break;
 					
 				case 30:
@@ -470,26 +458,6 @@ public class ProductExcelMapper {
 					}
 					break;
 					
-				case 34:
-					  imprintSize = cell.getStringCellValue();
-					  
-					break;
-					
-				case 35:
-					
-					// to process this there is some problem with ASI Product on ui for this criteria not able to work on this now
-					boolean flagim=false;
-					/*String imprintLocation = cell.getStringCellValue();
-					if(!StringUtils.isEmpty(imprintLocation)){
-						flagim=true;
-					}
-					impsizelocList=sizeLocParser.getimpsizeLocCriteria(imprintSize,imprintLocation,flagim);
-					if(impsizelocList!=null){
-					productConfigObj.setImprintSizeLocations(impsizelocList);
-					}*/
-					
-					break;
-				
 					
 				case 38:
 					prodSample = cell.getStringCellValue();
@@ -514,9 +482,7 @@ public class ProductExcelMapper {
 					if(productionTimeList!=null){
 					productConfigObj.setProductionTime(productionTimeList);
 					}
-					//System.out.println(columnIndex + "productionTimeList " + productionTimeList);
 				}
-					 
 					break;	
 					
 					
@@ -530,7 +496,6 @@ public class ProductExcelMapper {
 					rushTime=rushTimeParser.getRushTimeCriteria(rushTimeValue);
 					if(rushTime!=null){
 					productConfigObj.setRushTime(rushTime);
-					//System.out.println(columnIndex + "rushTime " + rushTime);
 					}}
 					break;
 				
@@ -540,9 +505,7 @@ public class ProductExcelMapper {
 						sameDayObj=sameDayParser.getSameDayRush(sameDayService);
 						if(sameDayObj!=null){
 						productConfigObj.setSameDayRush(sameDayObj);
-						//System.out.println(columnIndex + "rushTime " + rushTime);
-						}
-						}
+						}}
 					break;
 					
 				case 44:
@@ -560,18 +523,14 @@ public class ProductExcelMapper {
 					
 				case 46:
 					shippingdimensionValue = cell.getStringCellValue();
-
-					//System.out.println("case 46");
-					break;
+                	break;
 					
 				case 47:
 					String shippingWeightValue = cell.getStringCellValue();
-				
-					ShipingItem = shipinestmt.getShippingEstimates(
-							shippingitemValue, shippingdimensionValue,
-							shippingWeightValue);
+					ShipingItem = shipinestmt.getShippingEstimates(shippingitemValue, shippingdimensionValue,shippingWeightValue);
+					if(ShipingItem.getDimensions()!=null || ShipingItem.getNumberOfItems()!=null || ShipingItem.getWeight()!=null ){
 					productConfigObj.setShippingEstimates(ShipingItem);
-					//System.out.println("case 47");
+					}
 					break;
 					
 				case 48:
@@ -587,11 +546,9 @@ public class ProductExcelMapper {
 					String additionalShippingInfo = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(additionalShippingInfo)){
 					productExcelObj.setAdditionalShippingInfo(additionalShippingInfo);
-					//System.out.println(columnIndex + "ship info "+ additionalShippingInfo);
 					}else{
 						productExcelObj.setAdditionalShippingInfo(ApplicationConstants.CONST_STRING_EMPTY);	
 					}
-					//System.out.println("case 49");
 					break;
 					
 				case 50:
@@ -604,8 +561,6 @@ public class ProductExcelMapper {
 					}
 					}else{ productExcelObj.setCanShipInPlainBox(false);
 					}
-					// //System.out.println("ship plain box"
-					// +cell.getStringCellValue());
 					break;
 					
 				case 51:
@@ -617,7 +572,6 @@ public class ProductExcelMapper {
 					} 
 					productExcelObj.setComplianceCerts(complianceCerts);
 					}
-					//System.out.println(columnIndex + "compcert "+ complianceCerts);
 					break;
 					
 				case 52:
@@ -668,15 +622,18 @@ public class ProductExcelMapper {
 						productExcelObj.setProductDisclaimer(ApplicationConstants.CONST_STRING_EMPTY);
 					} 
 					break;
+					
 				case 57:
 					basePriceName = cell.getStringCellValue();
 					break;
+					
 				case 58:
 					String criteria1 = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(criteria1)){
 						basePriceCriteria.append(criteria1).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
 					}
 					break;
+			
 				case 59:
 					String criteria2 = cell.getStringCellValue();
 					if(!StringUtils.isEmpty(criteria2)){
@@ -703,7 +660,6 @@ public class ProductExcelMapper {
 				        	 listOfQuantity.append(quantity1).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
 				         }
 					}else{
-						
 					}
 			          break;
 				case 70:
@@ -727,9 +683,8 @@ public class ProductExcelMapper {
 			        	 listOfPrices.append(quantity1).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
 			         }
 				}else{
-					
 				}
-					            break;
+				  break;
 				case 80:
 				case 81:
 				case 82:
@@ -739,13 +694,12 @@ public class ProductExcelMapper {
 				case 86:
 				case 87:
 				case 88:
-				case 89:
-					
+				case 89:	
 					quantity = cell.getStringCellValue();
 			         if(!StringUtils.isEmpty(quantity)){
 			        	 listOfDiscount.append(quantity).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
 			         }
-					          break;
+					  break;
 				case 91:
 					   priceIncludes = cell.getStringCellValue();
 					   break;
@@ -766,8 +720,6 @@ public class ProductExcelMapper {
 					}else{
 						productExcelObj.setCanOrderLessThanMinimum(false);
 					}
-					
-					
 					break;
 
 				case 95:
@@ -784,7 +736,6 @@ public class ProductExcelMapper {
 					break;
 
 				case 96:
-					
 					boolean breakOutByPrice = cell.getBooleanCellValue();
 					if(!StringUtils.isEmpty(String.valueOf(breakOutByPrice))){
 					productExcelObj.setBreakOutByPrice(breakOutByPrice);
@@ -792,24 +743,29 @@ public class ProductExcelMapper {
 						productExcelObj.setBreakOutByPrice(false);	
 					}
 					break;
+				
 				case 97:
 					upChargeName = cell.getStringCellValue();
 					break;//upcharge name
+				
 				case 98:
 					String upCriteria1= cell.getStringCellValue();
 					if(!StringUtils.isEmpty(upCriteria1)){
 						UpCharCriteria.append(upCriteria1).append(ApplicationConstants.PRICE_SPLITTER_BASE_PRICEGRID);
 					}
 					break;//upcharge criteria_1
+				
 				case 99:
 					String upCriteria2= cell.getStringCellValue();
 					if(!StringUtils.isEmpty(upCriteria2)){
 						UpCharCriteria.append(upCriteria2);
 					}
 					break;//upcharge criteria_2
+				
 				case 100:
 					upchargeType = cell.getStringCellValue();
 					break;//upcharge type
+				
 				case 101:
 					upChargeLevel = cell.getStringCellValue();
 					break;//upcharge level
@@ -895,8 +851,7 @@ public class ProductExcelMapper {
 					break;// QUR Flag
 				case 134:
 					String priceConfirmedThru = cell.getStringCellValue();
-					//mmddyy   //yymmdd
-					 
+					//mmddyy in excel  //yymmdd in api
 					String strArr[]=priceConfirmedThru.split("/");
 					priceConfirmedThru=strArr[2]+"/"+strArr[0]+"/"+strArr[1];
 					priceConfirmedThru=priceConfirmedThru.replaceAll("/", "-");
@@ -905,6 +860,20 @@ public class ProductExcelMapper {
 					 	productExcelObj.setPriceConfirmedThru(priceConfirmedThru);
 					break;
 					
+				case 136:
+					  productNumberCriteria1 = cell.getStringCellValue();
+				
+					break;
+				case 137:
+					  productNumberCriteria2 = cell.getStringCellValue();
+					
+					break;
+				case 138:
+					productNumber = cell.getStringCellValue();
+					
+					 
+					
+					break;
 				case 140:
 				   SKUCriteria1 = cell.getStringCellValue();
 					break;
@@ -929,24 +898,18 @@ public class ProductExcelMapper {
 				
 				case 147:
 					//int InQuantity= cell.getStringCellValue();
-					int InQuantity = 0;
+					int InQuantity1 = 0;
 					if(cell.getCellType() == Cell.CELL_TYPE_NUMERIC){
-						InQuantity = (int) cell.getNumericCellValue();
+						InQuantity1 = (int) cell.getNumericCellValue();
 					}else if(cell.getCellType() == Cell.CELL_TYPE_STRING){
 						try{
-							InQuantity = Integer.parseInt(cell.getStringCellValue());
+							InQuantity1 = Integer.parseInt(cell.getStringCellValue());
 						}catch(NumberFormatException nfe){
 							_LOGGER.error("Criteria Level Inventory Quantity::Invalid value");
 						}
 						
 					}
-					skuObj=skuparserobj.getProductRelationSkus(SKUCriteria1, SKUCriteria2, skuvalue, Inlink, Instatus,Integer.toString(InQuantity));
-					
-					
-					if(!StringUtils.isEmpty(skuObj.getSKU())){
-						productsku.add(skuObj);	
-					productExcelObj.setProductRelationSkus(productsku);
-					}
+					skuObj=skuparserobj.getProductRelationSkus(SKUCriteria1, SKUCriteria2, skuvalue, Inlink, Instatus,Integer.toString(InQuantity1));
 					
 					break;	
 				case 148:
@@ -983,6 +946,17 @@ public class ProductExcelMapper {
 					priceGrids = priceGridParser.getUpchargePriceGrid(UpCharQuantity.toString(), UpCharPrices.toString(), UpCharDiscount.toString(), UpCharCriteria.toString(), 
 							 upChargeQur, currencyType, upChargeName, upchargeType, upChargeLevel, new Integer(1), priceGrids);
 				}
+				
+				if(!StringUtils.isEmpty(skuvalue)){
+					skuObj=skuparserobj.getProductRelationSkus(SKUCriteria1, SKUCriteria2, skuvalue, Inlink, Instatus,InQuantity);
+					productsku.add(skuObj);
+				}
+				
+				if(!StringUtils.isEmpty(productNumber)){
+					pnumObj=pnumberParser.getProductNumer(productNumberCriteria1, productNumberCriteria2, productNumber);
+					pnumberList.add(pnumObj);
+				}
+				
 				upChargeQur = null;
 				UpCharCriteria = new StringBuilder();
 				priceQurFlag = null;
@@ -990,6 +964,15 @@ public class ProductExcelMapper {
 				UpCharPrices = new StringBuilder();
 				UpCharDiscount = new StringBuilder();
 				UpCharQuantity = new StringBuilder();
+				skuvalue = null;
+			    Inlink = null;
+			    Instatus = null;
+			    InQuantity = null;
+			    SKUCriteria1 = null;
+			    SKUCriteria2 = null;
+			    productNumberCriteria1=null; 
+			    productNumberCriteria2=null;
+			    productNumber=null;
 			
 			}catch(Exception e){
 			//e.printStackTrace();
@@ -1004,13 +987,14 @@ public class ProductExcelMapper {
 		   // Add repeatable sets here
 		 	productExcelObj.setPriceGrids(priceGrids);
 		 	productExcelObj.setProductConfigurations(productConfigObj);
+		 	productExcelObj.setProductRelationSkus(productsku);
+		 	productExcelObj.setProductNumbers(pnumberList);
 		 	productList.add(productExcelObj);
 			System.out.println(mapper1.writeValueAsString(productExcelObj));
 
 		}catch(Exception e){
 			//e.printStackTrace();
 			_LOGGER.error("Error while Processing excel sheet :"+path.substring(path.lastIndexOf("\\")) +e.getMessage());
-			
 			return null;
 		}finally{
 			try {
@@ -1021,8 +1005,6 @@ public class ProductExcelMapper {
 				//e.printStackTrace();
 				_LOGGER.error("Error while Processing excel sheet :"+path.substring(path.lastIndexOf("\\"))+e.getMessage());
 			}
-			
-			
 		}
 		_LOGGER.info("Complted processing of excel sheet :"+path.substring(path.lastIndexOf("\\") ));
 		_LOGGER.info("Total no of product:"+productList.size() );

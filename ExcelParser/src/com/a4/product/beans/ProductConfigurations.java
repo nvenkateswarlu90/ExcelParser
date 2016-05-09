@@ -24,7 +24,7 @@ public class ProductConfigurations {
     @JsonProperty("Materials")
     private List<Material>            materials            = null;
     @JsonProperty("Sizes")
-    private Size                	  sizes                = new Size();
+    private Size                	  sizes                = null;
     
     // STORY: VELO-8350
     // Author: ZAhmed, Date: 11/04/2015, Fix Version 1.3.10
