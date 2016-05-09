@@ -27,6 +27,7 @@ public static final String PRICE_SPLITTER_BASE_PRICEGRID              = "___";
     public static final String  CONST_VALUE_TYPE_VOLUME = "Volume";
     public static final String  CONST_VALUE_TYPE_APPAREL = "Apparel";
     public static final String  CONST_VALUE_TYPE_OTHER = "Other";
+    public static final String  CONST_VALUE_TYPE_SPACE = " ";
     
     
     
