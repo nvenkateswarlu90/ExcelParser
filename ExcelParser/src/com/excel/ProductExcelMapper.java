@@ -4,6 +4,7 @@ import java.io.File;
 import java.io.FileInputStream;
 import java.io.IOException;
 import java.util.ArrayList;
+import java.util.Collections;
 import java.util.Iterator;
 import java.util.List;
 
@@ -51,8 +52,6 @@ import com.criteria.parser.ProductThemeParser;
 import com.criteria.parser.ProductTradeNameParser;
 import com.criteria.parser.ProductionTimeParser;
 import com.criteria.parser.ShippingEstimationParser;
-import com.fasterxml.jackson.core.JsonGenerationException;
-import com.fasterxml.jackson.databind.JsonMappingException;
 import com.fasterxml.jackson.databind.ObjectMapper;
 
 
@@ -64,7 +63,7 @@ public class ProductExcelMapper {
 		try
 		{
 		ProductExcelMapper djvsd= new ProductExcelMapper();
-		List<Product> BeanObj = djvsd.readFileUsingPOI("D:\\Excel Reader\\productv2.xlsx");
+		List<Product> BeanObj = djvsd.readFileUsingPOI("E:\\productv2.xlsx");
 		if(BeanObj==null){
 			// log error or write business logic
 			System.out.println("there was an error while prcessing this file");
@@ -86,6 +85,7 @@ public class ProductExcelMapper {
 		List<String>  productXids = new ArrayList<String>();
 		  Product productExcelObj = new Product();   
 		  ProductConfigurations productConfigObj=new ProductConfigurations();
+		  boolean isProduct = false;
 		  String externalProductId = null;
 		  String currencyType = null;
 		  String priceQurFlag = null;
@@ -189,19 +189,54 @@ public class ProductExcelMapper {
 			String Instatus  =null;
 			String quantity = null;
 			 productXids.add(externalProductId);
+			 boolean checkXid  = false;
 			 
 			
 			while (cellIterator.hasNext()) {
 				Cell cell = cellIterator.next();
+				String xid = null;
 				int columnIndex = cell.getColumnIndex();
-				if(productXids.size() > 2 && !LookupData.isRepeateIndex(String.valueOf(columnIndex+1))){
+				if(columnIndex + 1 == 1){
+					 xid = cell.getStringCellValue();
+					 if(productXids.contains(xid)){
+						 productXids.add(xid);
+					 }else{
+						 productXids = new ArrayList<String>();
+					 }
+					 
+					checkXid = true;
+				}else{
+					checkXid = false;
+				}
+				if(checkXid){
+					 if(!productXids.contains(xid)){
+						 if(nextRow.getRowNum() != 1){
+							 System.out.println("Java object converted to JSON String, written to file");
+							 ObjectMapper mapper = new ObjectMapper();
+							   // Add repeatable sets here
+							 	productExcelObj.setPriceGrids(priceGrids);
+							 	productExcelObj.setProductConfigurations(productConfigObj);
+							 	productList.add(productExcelObj);
+								System.out.println(mapper.writeValueAsString(productExcelObj));
+								
+								// reset for repeateable set 
+								priceGrids = new ArrayList<PriceGrid>();
+								productConfigObj = new ProductConfigurations();
+								
+						 }
+						    if(!productXids.contains(xid)){
+						    	productXids.add(xid);
+						    }
+							productExcelObj = new Product();
+					 }
+				}
+				if(productXids.size() >1  && !LookupData.isRepeateIndex(String.valueOf(columnIndex+1))){
 					continue;
 				}
 
 				switch (columnIndex + 1) {
 				case 1:
 					 externalProductId = cell.getStringCellValue();
-					_LOGGER.info("Processing Product :"+ externalProductId);
 					_LOGGER.info("Processing Product :"+ externalProductId);
 					/*if(externalProductId==null || externalProductId.isEmpty()){
 						rowFlag=true;
@@ -223,8 +258,18 @@ public class ProductExcelMapper {
 					//System.out.println("case 2");
 					break;
 				case 3:
-					int asiProdNo = (int) cell.getNumericCellValue();
-					productExcelObj.setAsiProdNo(Integer.toString(asiProdNo));
+					int asiProdNo = 0;
+					if(cell.getCellType() == Cell.CELL_TYPE_STRING){
+						try{
+							asiProdNo = Integer.parseInt(cell.getStringCellValue());
+							productExcelObj.setAsiProdNo(Integer.toString(asiProdNo));
+						}catch(NumberFormatException nfe){
+							
+						}
+					  }else if(cell.getCellType() == Cell.CELL_TYPE_NUMERIC){
+						  asiProdNo = (int) cell.getNumericCellValue();
+						  productExcelObj.setAsiProdNo(Integer.toString(asiProdNo));
+					  }
 					break;
 				case 4:
 					String productLevelSku = cell.getStringCellValue();
@@ -256,7 +301,17 @@ public class ProductExcelMapper {
 					break;
 					
 				case 7:
-					int inventoryQuantity = (int) cell.getNumericCellValue();
+					int inventoryQuantity =0;
+					if(cell.getCellType() == Cell.CELL_TYPE_NUMERIC){
+						inventoryQuantity = (int) cell.getNumericCellValue();
+					}else if(cell.getCellType() == Cell.CELL_TYPE_STRING){
+						try{
+							inventoryQuantity = Integer.parseInt(cell.getStringCellValue());
+						}catch(NumberFormatException nfe){
+							_LOGGER.error("Product Level Inventory Quantity::Invalid value");
+						}
+						
+					}
 					if(!StringUtils.isEmpty(Integer.toString(inventoryQuantity))){
 					inventoryObj.setInventoryQuantity(Integer.toString(inventoryQuantity));
 					productExcelObj.setInventory(inventoryObj);
@@ -572,8 +627,6 @@ public class ProductExcelMapper {
 					}else{
 						productExcelObj.setProductDataSheet(ApplicationConstants.CONST_STRING_EMPTY);
 					}
-					// //System.out.println("product data sheet is "
-					// +productDataSheet);
 					break;
 					
 				case 53:
@@ -696,8 +749,12 @@ public class ProductExcelMapper {
 				case 91:
 					   priceIncludes = cell.getStringCellValue();
 					   break;
+				case 92:
+					 priceQurFlag = cell.getStringCellValue();
+					 break;
 				case 93:
 					 currencyType = cell.getStringCellValue();
+					 break;
 				case 94:
 					if(cell.getCellType() ==  Cell.CELL_TYPE_BOOLEAN){
 						if(!StringUtils.isEmpty(String.valueOf(cell.getBooleanCellValue()))){
@@ -872,7 +929,17 @@ public class ProductExcelMapper {
 				
 				case 147:
 					//int InQuantity= cell.getStringCellValue();
-					int InQuantity = (int) cell.getNumericCellValue();
+					int InQuantity = 0;
+					if(cell.getCellType() == Cell.CELL_TYPE_NUMERIC){
+						InQuantity = (int) cell.getNumericCellValue();
+					}else if(cell.getCellType() == Cell.CELL_TYPE_STRING){
+						try{
+							InQuantity = Integer.parseInt(cell.getStringCellValue());
+						}catch(NumberFormatException nfe){
+							_LOGGER.error("Criteria Level Inventory Quantity::Invalid value");
+						}
+						
+					}
 					skuObj=skuparserobj.getProductRelationSkus(SKUCriteria1, SKUCriteria2, skuvalue, Inlink, Instatus,Integer.toString(InQuantity));
 					
 					
@@ -902,16 +969,11 @@ public class ProductExcelMapper {
 					break;
 				}
 				
-				productExcelObj.setProductConfigurations(productConfigObj);
-			} 
+				//productExcelObj.setProductConfigurations(productConfigObj);l
+			}  // end inner while loop
 			
-			}catch(Exception e){
-			//e.printStackTrace();
-			_LOGGER.error("Error while Processing Product :"+productExcelObj.getExternalProductId() );
 			
-			 
-		}
-			productList.add(productExcelObj);
+			
 			if((!listOfPrices.toString().isEmpty() && priceQurFlag == null) || (listOfPrices.toString().isEmpty() && priceQurFlag != null)){
 				priceGrids = priceGridParser.getPriceGrids(listOfPrices.toString(), listOfQuantity.toString(), listOfDiscount.toString(), currencyType,
 						priceIncludes, true, priceQurFlag, basePriceName,basePriceCriteria.toString(),priceGrids);	
@@ -928,30 +990,23 @@ public class ProductExcelMapper {
 				UpCharPrices = new StringBuilder();
 				UpCharDiscount = new StringBuilder();
 				UpCharQuantity = new StringBuilder();
+			
+			}catch(Exception e){
+			//e.printStackTrace();
+			_LOGGER.error("Error while Processing Product :"+productExcelObj.getExternalProductId() );		 
+		}
 		}
 		workbook.close();
 		inputStream.close();
-		
-		productExcelObj.setPriceGrids(priceGrids);
-		productList.add(productExcelObj);
 		ObjectMapper mapper = new ObjectMapper();
-		try {
-			File json = new File("D:\\Excel Reader\\file.json");
-		mapper.writeValue(json, productExcelObj);
-		System.out.println("/////////////////////////////////////////");
-		System.out.println("Java object converted to JSON String, written to file");
-		System.out.println(mapper.writeValueAsString(productExcelObj)); 
-		System.out.println("/////////////////////////////////////////");
-		} catch (JsonGenerationException ex) 
-		{ ex.printStackTrace(); 
-		} 
-		catch (JsonMappingException ex) {
-			ex.printStackTrace(); 
-			} 
-		catch (IOException ex)
-		{ ex.printStackTrace();
-		}
-		//}
+		System.out.println("Final product JSON, written to file");
+		 ObjectMapper mapper1 = new ObjectMapper();
+		   // Add repeatable sets here
+		 	productExcelObj.setPriceGrids(priceGrids);
+		 	productExcelObj.setProductConfigurations(productConfigObj);
+		 	productList.add(productExcelObj);
+			System.out.println(mapper1.writeValueAsString(productExcelObj));
+
 		}catch(Exception e){
 			//e.printStackTrace();
 			_LOGGER.error("Error while Processing excel sheet :"+path.substring(path.lastIndexOf("\\")) +e.getMessage());
